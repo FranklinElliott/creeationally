@@ -907,7 +907,7 @@
       width: 100% !important;
       height: 100% !important;
       pointer-events: none !important;
-      z-index: 6 !important;
+      z-index: 2 !important;
       border-radius: inherit !important;
     }
 
@@ -955,21 +955,49 @@
 
   
     
-    /* === CURRENT GAME + TOTAL TIMERS (fixed, colored, no clip) === */
+    /* === TIMERS ON TOP + NO CLIP === */
+    .obs-fx {
+      z-index: 2 !important; /* under text/timers so they never get washed out */
+    }
+    .letter-box, .cover, .main-col, .timer-panel {
+      position: relative;
+      z-index: 8 !important;
+    }
+    .scanlines, .shine, .pulse-ring, .scan-line, .edge-runner, .aura-spin, .spark {
+      z-index: 3 !important;
+    }
+    .game-overlay,
+    .game-overlay.compact {
+      overflow: hidden !important; /* keep rounded card */
+      height: 188px !important;
+      min-height: 188px !important;
+      max-height: 188px !important;
+      padding-right: 16px !important;
+    }
+    body.overlay-mode #app {
+      width: 860px;
+      height: 188px;
+    }
+    .preview-wrap {
+      overflow: visible !important;
+    }
     .timer-panel {
-      flex: 0 0 210px !important;
-      width: 210px !important;
-      min-width: 210px !important;
-      max-width: 210px !important;
+      flex: 0 0 220px !important;
+      width: 220px !important;
+      min-width: 220px !important;
+      max-width: 220px !important;
       height: auto !important;
-      min-height: 78px !important;
+      min-height: 88px !important;
       max-height: none !important;
-      gap: 10px !important;
-      padding: 2px 4px 2px 14px !important;
+      gap: 12px !important;
+      padding: 6px 8px 6px 14px !important;
+      margin: 0 !important;
       overflow: visible !important;
       justify-content: center !important;
       align-items: flex-end !important;
       border-left: 1px solid color-mix(in srgb, var(--g-primary) 28%, transparent) !important;
+      background: linear-gradient(90deg, transparent, rgba(0,0,0,0.35) 30%) !important;
+      border-radius: 0 12px 12px 0;
     }
     .timer-panel .timer-block {
       display: flex !important;
@@ -979,59 +1007,85 @@
       overflow: visible !important;
     }
     .timer-panel .label {
-      font-size: 0.6rem !important;
+      font-size: 0.58rem !important;
       letter-spacing: 0.1em !important;
       text-transform: uppercase !important;
       white-space: nowrap !important;
-      margin-bottom: 2px !important;
-      line-height: 1.15 !important;
+      margin-bottom: 3px !important;
+      line-height: 1.1 !important;
       opacity: 1 !important;
-      max-width: none !important;
       overflow: visible !important;
+      max-width: none !important;
     }
     .timer-panel .game-time .label {
       color: #7dd3fc !important;
-      text-shadow: 0 0 10px rgba(125, 211, 252, 0.55) !important;
+      text-shadow: 0 0 8px rgba(125, 211, 252, 0.6) !important;
     }
     .timer-panel .game-time .run-clock,
     .timer-panel .game-clock {
-      color: #7dd3fc !important;
-      font-size: 1.32rem !important;
+      color: #e0f2fe !important;
+      font-size: 1.28rem !important;
       font-weight: 900 !important;
+      font-variant-numeric: tabular-nums !important;
       white-space: nowrap !important;
       overflow: visible !important;
       max-width: none !important;
-      width: auto !important;
-      text-shadow: 0 0 14px rgba(125, 211, 252, 0.7), 0 2px 6px rgba(0,0,0,.55) !important;
+      width: max-content !important;
+      min-width: 7.2ch !important;
+      line-height: 1.05 !important;
+      text-shadow:
+        0 0 1px #000,
+        0 1px 3px rgba(0,0,0,0.9),
+        0 0 12px rgba(125, 211, 252, 0.75) !important;
       filter: none !important;
-      letter-spacing: 0.02em !important;
+      opacity: 1 !important;
+      transform: none !important; /* avoid anim scale clipping */
+      letter-spacing: 0.03em !important;
+      background: rgba(8, 20, 32, 0.55);
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(125, 211, 252, 0.35);
     }
     .timer-panel .total-time-block .label {
-      color: color-mix(in srgb, var(--g-primary) 88%, #fff) !important;
-      text-shadow: 0 0 8px color-mix(in srgb, var(--g-glow) 40%, transparent) !important;
+      color: color-mix(in srgb, var(--g-primary) 90%, #fff) !important;
     }
     .timer-panel .total-time-block .run-clock,
     .timer-panel .total-clock {
-      color: color-mix(in srgb, var(--g-primary) 92%, #fff) !important;
-      font-size: 1.32rem !important;
+      color: #f0fff0 !important;
+      font-size: 1.28rem !important;
       font-weight: 900 !important;
+      font-variant-numeric: tabular-nums !important;
       white-space: nowrap !important;
       overflow: visible !important;
       max-width: none !important;
-      width: auto !important;
+      width: max-content !important;
+      min-width: 7.2ch !important;
+      line-height: 1.05 !important;
+      text-shadow:
+        0 0 1px #000,
+        0 1px 3px rgba(0,0,0,0.9),
+        0 0 12px color-mix(in srgb, var(--g-glow) 55%, transparent) !important;
+      filter: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+      letter-spacing: 0.03em !important;
+      background: rgba(0, 0, 0, 0.45);
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid color-mix(in srgb, var(--g-primary) 40%, transparent);
     }
     .main-meta {
-      max-width: calc(100% - 230px) !important;
+      max-width: calc(100% - 240px) !important;
     }
-    .game-overlay,
-    .game-overlay.compact {
-      height: 180px !important;
-      min-height: 180px !important;
-      max-height: 180px !important;
+    .main-col {
+      z-index: 8 !important;
+      overflow: visible !important;
     }
-    body.overlay-mode #app {
-      width: 860px;
-      height: 180px;
+    .main-bottom {
+      overflow: visible !important;
+      min-height: 88px !important;
+      height: auto !important;
+      align-items: center !important;
     }
 
   </style>
@@ -1039,6 +1093,7 @@
 <body>
   <div id="app"></div>
   <script>
+
 
 
 
@@ -1103,6 +1158,12 @@ function prefersReducedMotion() {
         var w = dim.w, h = dim.h, dpr = dim.dpr;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, w, h);
+        // Leave right timer column clear of FX so clocks stay sharp
+        var timerSafe = Math.min(230, w * 0.28);
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 0, Math.max(0, w - timerSafe), h);
+        ctx.clip();
 
         // Read theme color from CSS var
         var styles = getComputedStyle(overlay);
@@ -1165,7 +1226,9 @@ function prefersReducedMotion() {
         ctx.fillStyle = eg;
         ctx.fillRect(0, 0, w, h);
 
-        // DOM extras (works in normal browsers; canvas covers OBS)
+        ctx.restore();
+
+        // DOM extras (works in normal browsers; canvas under text)
         document.querySelectorAll(".letter-box").forEach(function (box) {
           var p = 0.5 + 0.5 * Math.sin(t * 2.8);
           box.style.transform = "scale(" + (1 + p * 0.07) + ")";
@@ -1173,10 +1236,7 @@ function prefersReducedMotion() {
         document.querySelectorAll(".cover").forEach(function (cover, i) {
           cover.style.transform = "translateY(" + (Math.sin(t * 2 + i) * 5) + "px)";
         });
-        document.querySelectorAll(".timer-panel .run-clock").forEach(function (clock) {
-          var p = 0.5 + 0.5 * Math.sin(t * 2.2);
-          clock.style.transform = "scale(" + (1 + p * 0.03) + ")";
-        });
+        /* timer clocks stay unscaled so digits never clip */
 
         // Force text repaint path (timer already does; keep a live counter attribute)
         overlay.setAttribute("data-fx", String(Math.floor(t * 30)));
@@ -1622,7 +1682,7 @@ function prefersReducedMotion() {
         '<button class="copy-btn" id="copy" style="background:' + game.theme.primary + '">Copy full OBS URL</button>' +
         '<button type="button" class="secondary-btn" id="selectUrl">Select all</button>' +
         "</div></div>" +
-        '<p class="hint">OBS → Browser Source → paste the <strong>full</strong> URL → width <strong>860</strong>, height <strong>180</strong> (exact — overlay is fixed size) → transparent background. Use the Copy button (don’t try to highlight the truncated text).</p>' +
+        '<p class="hint">OBS → Browser Source → paste the <strong>full</strong> URL → width <strong>860</strong>, height <strong>188</strong> (exact — overlay is fixed size) → transparent background. Use the Copy button (don’t try to highlight the truncated text).</p>' +
         "</section>" +
         '<section class="card"><h2 style="margin-bottom:14px">All letters</h2><div class="letters" id="letters"></div></section>' +
         "</div>" +
@@ -1788,6 +1848,7 @@ function prefersReducedMotion() {
 
     render();
 
+  
   
   
   
