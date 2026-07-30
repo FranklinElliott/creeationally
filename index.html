@@ -902,11 +902,23 @@
       backface-visibility: hidden;
     }
 
+  
+    .obs-fx {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      pointer-events: none !important;
+      z-index: 6 !important;
+      border-radius: inherit !important;
+    }
+
   </style>
 </head>
 <body>
   <div id="app"></div>
   <script>
+
 
 
 
@@ -930,111 +942,128 @@ function prefersReducedMotion() {
     function startObsAnimations() {
       stopObsAnimations();
       if (prefersReducedMotion()) return;
-      if (!document.querySelector(".game-overlay")) return;
+      var overlay = document.querySelector(".game-overlay");
+      if (!overlay) return;
       animT0 = Date.now();
 
-      // Hidden canvas: drawing every frame forces OBS CEF to repaint
-      // (text timer updates repaint; pure CSS transform often does not)
-      var paint = document.getElementById("obs-paint");
-      if (!paint) {
-        paint = document.createElement("canvas");
-        paint.id = "obs-paint";
-        paint.width = 4;
-        paint.height = 4;
-        paint.setAttribute("aria-hidden", "true");
-        paint.style.cssText = "position:fixed;left:0;top:0;width:2px;height:2px;opacity:0.02;pointer-events:none;z-index:9999;";
-        document.body.appendChild(paint);
+      // Full-card canvas layer — OBS CEF reliably repaints canvas, not always CSS transforms
+      var fx = overlay.querySelector(".obs-fx");
+      if (!fx) {
+        fx = document.createElement("canvas");
+        fx.className = "obs-fx";
+        fx.setAttribute("aria-hidden", "true");
+        overlay.appendChild(fx);
       }
-      var ctx = paint.getContext("2d");
+      function sizeCanvas() {
+        var w = overlay.clientWidth || 860;
+        var h = overlay.clientHeight || 168;
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        fx.width = Math.max(1, Math.floor(w * dpr));
+        fx.height = Math.max(1, Math.floor(h * dpr));
+        fx.style.width = w + "px";
+        fx.style.height = h + "px";
+        return { w: w, h: h, dpr: dpr };
+      }
+      var ctx = fx.getContext("2d", { alpha: true });
 
+      // Also keep DOM motion for browsers that show it
       function tick() {
         var t = (Date.now() - animT0) / 1000;
-        var frame = Math.floor(t * 20);
+        var dim = sizeCanvas();
+        var w = dim.w, h = dim.h, dpr = dim.dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, w, h);
 
-        // Force OBS Browser Source composite/repaint every tick
-        try {
-          if (ctx) {
-            ctx.fillStyle = "rgb(" + (frame % 255) + ",40,80)";
-            ctx.fillRect(0, 0, 4, 4);
-          }
-          document.documentElement.style.setProperty("--obs-frame", String(frame));
-          // Title flicker forces layout in stubborn CEF builds
-          document.title = "AZ " + (frame % 1000);
-        } catch (e) {}
+        // Read theme color from CSS var
+        var styles = getComputedStyle(overlay);
+        var primary = (styles.getPropertyValue("--g-primary") || "#39ff14").trim();
+        var glow = (styles.getPropertyValue("--g-glow") || primary).trim();
 
-        document.querySelectorAll(".game-overlay").forEach(function (el) {
-          var pulse = 0.5 + 0.5 * Math.sin(t * 2.4);
-          var ring = el.querySelector(".pulse-ring");
-          if (ring) {
-            ring.style.opacity = String(0.25 + pulse * 0.65);
-            // use outline-width style via boxShadow size in px only (no color-mix)
-            ring.style.transform = "scale(" + (1 + pulse * 0.02) + ")";
-          }
-          // slight whole-card nudge forces layer update
-          el.style.transform = "translateZ(0) translateY(" + (Math.sin(t * 1.2) * 1.5) + "px)";
-        });
+        // Pulsing border glow (canvas)
+        var pulse = 0.5 + 0.5 * Math.sin(t * 2.6);
+        ctx.save();
+        ctx.strokeStyle = primary;
+        ctx.globalAlpha = 0.25 + pulse * 0.45;
+        ctx.lineWidth = 2 + pulse * 2;
+        ctx.shadowColor = glow;
+        ctx.shadowBlur = 12 + pulse * 18;
+        roundRect(ctx, 3, 3, w - 6, h - 6, 14);
+        ctx.stroke();
+        ctx.restore();
 
+        // Sliding shine band
+        var shineX = ((t * 0.45) % 1.4) * w - w * 0.2;
+        var grad = ctx.createLinearGradient(shineX, 0, shineX + w * 0.25, 0);
+        grad.addColorStop(0, "rgba(255,255,255,0)");
+        grad.addColorStop(0.5, "rgba(255,255,255," + (0.18 + pulse * 0.1) + ")");
+        grad.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+
+        // Scan line
+        var sy = ((t * 70) % (h + 40)) - 20;
+        var sg = ctx.createLinearGradient(0, sy - 20, 0, sy + 20);
+        sg.addColorStop(0, "rgba(255,255,255,0)");
+        sg.addColorStop(0.5, "rgba(255,255,255,0.14)");
+        sg.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = sg;
+        ctx.fillRect(0, sy - 20, w, 40);
+
+        // Sparks
+        for (var i = 0; i < 5; i++) {
+          var phase = t * (1.5 + i * 0.25) + i * 2.1;
+          var sx = w * (0.35 + i * 0.1) + Math.cos(phase) * 18;
+          var sy2 = h * (0.3 + (i % 3) * 0.15) + Math.sin(phase * 1.3) * 14;
+          var op = 0.3 + 0.6 * (0.5 + 0.5 * Math.sin(phase * 1.4));
+          ctx.beginPath();
+          ctx.fillStyle = primary;
+          ctx.globalAlpha = op;
+          ctx.shadowColor = glow;
+          ctx.shadowBlur = 10;
+          ctx.arc(sx, sy2, 2.2 + op * 1.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.shadowBlur = 0;
+        }
+
+        // Edge runner
+        var ex = ((t * 0.55) % 1) * w;
+        var eg = ctx.createLinearGradient(ex - 40, 0, ex + 40, 0);
+        eg.addColorStop(0, "rgba(255,255,255,0)");
+        eg.addColorStop(0.5, "rgba(255,255,255,0.2)");
+        eg.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = eg;
+        ctx.fillRect(0, 0, w, h);
+
+        // DOM extras (works in normal browsers; canvas covers OBS)
         document.querySelectorAll(".letter-box").forEach(function (box) {
-          var pulse = 0.5 + 0.5 * Math.sin(t * 2.8);
-          box.style.transform = "scale(" + (1 + pulse * 0.08) + ") rotate(" + (Math.sin(t * 1.5) * 2) + "deg)";
+          var p = 0.5 + 0.5 * Math.sin(t * 2.8);
+          box.style.transform = "scale(" + (1 + p * 0.07) + ")";
         });
-
         document.querySelectorAll(".cover").forEach(function (cover, i) {
-          cover.style.transform = "translateY(" + (Math.sin(t * 2 + i) * 6) + "px)";
-          var img = cover.querySelector("img");
-          if (img) {
-            img.style.transform = "scale(" + (1.02 + 0.04 * Math.sin(t * 1.1 + i)) + ")";
-          }
+          cover.style.transform = "translateY(" + (Math.sin(t * 2 + i) * 5) + "px)";
         });
-
-        document.querySelectorAll(".shine-beam").forEach(function (beam, i) {
-          var cycle = (t * 0.4 + i * 0.2) % 1;
-          beam.style.left = (-60 + cycle * 200) + "%";
-          beam.style.opacity = String(cycle > 0.1 && cycle < 0.9 ? 0.85 : 0);
-        });
-
-        document.querySelectorAll(".spark").forEach(function (sp, i) {
-          var phase = t * (1.6 + i * 0.35) + i * 1.7;
-          sp.style.left = (20 + i * 25 + Math.cos(phase) * 6) + "%";
-          sp.style.top = (25 + i * 15 + Math.sin(phase) * 10) + "%";
-          sp.style.opacity = String(0.35 + 0.55 * (0.5 + 0.5 * Math.sin(phase * 1.3)));
-          sp.style.transform = "scale(" + (0.8 + 0.5 * Math.abs(Math.sin(phase))) + ")";
-        });
-
-        document.querySelectorAll(".scan-line").forEach(function (line) {
-          line.style.top = ((t * 55) % 130 - 15) + "%";
-          line.style.opacity = "0.55";
-        });
-
-        document.querySelectorAll(".aura-spin").forEach(function (aura) {
-          aura.style.transform = "rotate(" + ((t * 60) % 360) + "deg)";
-          aura.style.opacity = String(0.3 + 0.2 * Math.sin(t * 2));
-        });
-
-        document.querySelectorAll(".bar-fill").forEach(function (bar) {
-          var shim = bar.querySelector(".bar-shim");
-          if (shim) {
-            shim.style.transform = "translateX(" + (((t * 0.85) % 1) * 220 - 110) + "%)";
-            shim.style.opacity = "1";
-          }
-        });
-
         document.querySelectorAll(".timer-panel .run-clock").forEach(function (clock) {
-          var pulse = 0.5 + 0.5 * Math.sin(t * 2.2);
-          clock.style.transform = "scale(" + (1 + pulse * 0.04) + ")";
-          clock.style.letterSpacing = (0.02 + pulse * 0.02) + "em";
+          var p = 0.5 + 0.5 * Math.sin(t * 2.2);
+          clock.style.transform = "scale(" + (1 + p * 0.03) + ")";
         });
 
-        // Visible sliding edge light (very obvious motion for OBS QA)
-        document.querySelectorAll(".edge-runner").forEach(function (edge) {
-          var x = ((t * 0.5) % 1) * 100;
-          edge.style.left = x + "%";
-          edge.style.opacity = "0.9";
-        });
+        // Force text repaint path (timer already does; keep a live counter attribute)
+        overlay.setAttribute("data-fx", String(Math.floor(t * 30)));
+      }
+
+      function roundRect(c, x, y, rw, rh, r) {
+        var rr = Math.min(r, rw / 2, rh / 2);
+        c.beginPath();
+        c.moveTo(x + rr, y);
+        c.arcTo(x + rw, y, x + rw, y + rh, rr);
+        c.arcTo(x + rw, y + rh, x, y + rh, rr);
+        c.arcTo(x, y + rh, x, y, rr);
+        c.arcTo(x, y, x + rw, y, rr);
+        c.closePath();
       }
 
       tick();
-      // 30fps-ish; more reliable than rAF in OBS
       animTimer = setInterval(tick, 33);
     }
 
@@ -1528,6 +1557,7 @@ function prefersReducedMotion() {
 
     render();
 
+  
   
   
   </script>
