@@ -953,11 +953,85 @@
       max-width: calc(100% - 180px) !important;
     }
 
+  
+    /* Dual timers: full labels, no clip, distinct colors */
+    .timer-panel {
+      flex: 0 0 200px !important;
+      width: 200px !important;
+      min-width: 200px !important;
+      max-width: 200px !important;
+      height: auto !important;
+      min-height: 72px !important;
+      max-height: none !important;
+      gap: 10px !important;
+      padding: 0 0 0 14px !important;
+      overflow: visible !important;
+      justify-content: center !important;
+      align-items: flex-end !important;
+    }
+    .timer-panel .timer-block {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: flex-end !important;
+      width: 100% !important;
+      overflow: visible !important;
+    }
+    .timer-panel .label {
+      font-size: 0.62rem !important;
+      letter-spacing: 0.12em !important;
+      text-transform: uppercase !important;
+      white-space: nowrap !important;
+      margin-bottom: 3px !important;
+      line-height: 1.1 !important;
+      opacity: 1 !important;
+    }
+    .timer-panel .game-time .label {
+      color: #7dd3fc !important; /* light sky — current game */
+      text-shadow: 0 0 10px rgba(125, 211, 252, 0.55);
+    }
+    .timer-panel .game-time .run-clock,
+    .timer-panel .game-clock {
+      color: #7dd3fc !important;
+      font-size: 1.35rem !important;
+      font-weight: 900 !important;
+      white-space: nowrap !important;
+      overflow: visible !important;
+      max-width: none !important;
+      text-shadow: 0 0 14px rgba(125, 211, 252, 0.65), 0 2px 6px rgba(0,0,0,.5) !important;
+      filter: none !important;
+    }
+    .timer-panel .total-time-block .label {
+      color: color-mix(in srgb, var(--g-primary) 90%, white) !important;
+    }
+    .timer-panel .total-time-block .run-clock,
+    .timer-panel .total-clock {
+      color: color-mix(in srgb, var(--g-primary) 92%, white) !important;
+      font-size: 1.35rem !important;
+      font-weight: 900 !important;
+      white-space: nowrap !important;
+      overflow: visible !important;
+      max-width: none !important;
+    }
+    .main-meta {
+      max-width: calc(100% - 220px) !important;
+    }
+    /* slightly taller fixed card so two timers fit cleanly */
+    .game-overlay,
+    .game-overlay.compact {
+      height: 176px !important;
+      min-height: 176px !important;
+      max-height: 176px !important;
+    }
+    body.overlay-mode #app {
+      height: 176px;
+    }
+
   </style>
 </head>
 <body>
   <div id="app"></div>
   <script>
+
 
 
 
@@ -1289,13 +1363,13 @@ function prefersReducedMotion() {
       const gameElapsed = gameStart ? formatDuration(Date.now() - gameStart * 1000) : "";
       const timerPanel =
         '<div class="timer-panel">' +
-        '<div class="timer-block">' +
-        '<div class="label">Game</div>' +
+        '<div class="timer-block game-time">' +
+        '<div class="label">Current game</div>' +
         (gameStart
           ? '<div class="run-clock game-clock" data-game-start="' + gameStart + '">' + gameElapsed + "</div>"
           : '<div class="run-clock game-clock">--:--:--</div>') +
         "</div>" +
-        '<div class="timer-block">' +
+        '<div class="timer-block total-time-block">' +
         '<div class="label">Total</div>' +
         (runStart
           ? '<div class="run-clock total-clock" data-run-start="' + runStart + '">' + elapsed + "</div>"
@@ -1540,7 +1614,7 @@ function prefersReducedMotion() {
         '<button class="copy-btn" id="copy" style="background:' + game.theme.primary + '">Copy full OBS URL</button>' +
         '<button type="button" class="secondary-btn" id="selectUrl">Select all</button>' +
         "</div></div>" +
-        '<p class="hint">OBS → Browser Source → paste the <strong>full</strong> URL → width <strong>860</strong>, height <strong>168</strong> (exact — overlay is fixed size) → transparent background. Use the Copy button (don’t try to highlight the truncated text).</p>' +
+        '<p class="hint">OBS → Browser Source → paste the <strong>full</strong> URL → width <strong>860</strong>, height <strong>176</strong> (exact — overlay is fixed size) → transparent background. Use the Copy button (don’t try to highlight the truncated text).</p>' +
         "</section>" +
         '<section class="card"><h2 style="margin-bottom:14px">All letters</h2><div class="letters" id="letters"></div></section>' +
         "</div>" +
@@ -1706,6 +1780,7 @@ function prefersReducedMotion() {
 
     render();
 
+  
   
   
   
