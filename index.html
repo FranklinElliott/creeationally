@@ -911,11 +911,26 @@
       border-radius: inherit !important;
     }
 
+  
+    .motion-note {
+      margin: 0 0 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border));
+      background: color-mix(in srgb, var(--primary) 10%, var(--bg));
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--fg);
+    }
+    .motion-note strong { color: var(--primary); }
+    .motion-note a { color: var(--primary); font-weight: 700; }
+
   </style>
 </head>
 <body>
   <div id="app"></div>
   <script>
+
 
 
 
@@ -1411,6 +1426,7 @@ function prefersReducedMotion() {
         '<button class="icon-btn" id="prev" ' + (idx <= 0 ? "disabled" : "") + ' aria-label="Previous">‹</button>' +
         '<button class="icon-btn" id="next" ' + (idx >= 25 ? "disabled" : "") + ' aria-label="Next">›</button>' +
         "</div></div>" +
+        '<div class="motion-note" id="motionNote"><strong>Motion check:</strong> Watch the live preview below. If the letter/cover/glow is moving, you\'re good — stay on this page and <strong>Copy full OBS URL</strong> for stream. If it\'s frozen, hard-refresh or open <a href="https://franklinelliott.github.io/creeationally/?v=motion">the motion link</a>, then copy the OBS URL from there.</div>' +
         timerHtml +
         challengeHtml +
         picksHtml +
@@ -1560,6 +1576,7 @@ function prefersReducedMotion() {
 
     render();
 
+  
   
   
   
