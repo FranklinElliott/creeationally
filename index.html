@@ -875,11 +875,39 @@
       height: 168px;
     }
 
+  
+    .edge-runner {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 18%;
+      left: 0;
+      pointer-events: none;
+      z-index: 4;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+      mix-blend-mode: screen;
+    }
+    .spark {
+      position: absolute !important;
+      width: 7px !important;
+      height: 7px !important;
+      border-radius: 50% !important;
+      background: var(--g-primary) !important;
+      box-shadow: 0 0 10px var(--g-glow) !important;
+      pointer-events: none !important;
+      z-index: 5 !important;
+    }
+    .game-overlay, .letter-box, .cover, .cover img, .shine-beam, .scan-line, .pulse-ring, .aura-spin, .timer-panel .run-clock {
+      will-change: transform, opacity, left, top;
+      backface-visibility: hidden;
+    }
+
   </style>
 </head>
 <body>
   <div id="app"></div>
   <script>
+
 
 
     const DATA = {"A": [{"id": "apex", "title": "Apex Legends", "note": "", "cover": "covers/apex.jpg", "theme": {"surface": "#140a0a", "panel": "#1c0e0e", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#ff3b3b", "shape": "sharp", "flair": "military", "primary": "#da292a", "primaryDim": "#8b1012", "accent": "#f0a500"}}], "B": [{"id": "bo2", "title": "Call of Duty: Black Ops II", "note": "", "cover": "covers/bo2.jpg", "theme": {"surface": "#0a120a", "panel": "#0f1a0f", "fg": "#e8ffe8", "muted": "#8fb88f", "glow": "#39ff14", "shape": "sharp", "flair": "military", "primary": "#6bff4d", "primaryDim": "#1f7a28", "accent": "#c8ff9a"}}], "C": [{"id": "cs2", "title": "Counter-Strike 2", "note": "", "cover": "covers/cs2.jpg", "theme": {"surface": "#12100c", "panel": "#1a1610", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#e8a838", "shape": "sharp", "flair": "military", "primary": "#de9b35", "primaryDim": "#8a5a12", "accent": "#f5d08a"}}], "D": [{"id": "destiny2", "title": "Destiny 2", "note": "", "cover": "covers/destiny2.jpg", "theme": {"surface": "#0c0b14", "panel": "#15122a", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#f0d060", "shape": "soft", "flair": "energy", "primary": "#c9a227", "primaryDim": "#6e4f0a", "accent": "#7ec8ff"}}], "E": [{"id": "expedition33", "title": "Clair Obscur: Expedition 33", "note": "", "cover": "covers/expedition33.jpg", "theme": {"surface": "#0e0a14", "panel": "#1a1228", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#c4a8ff", "shape": "soft", "flair": "fantasy", "primary": "#b794f6", "primaryDim": "#5c3d8a", "accent": "#e8d5a3"}}, {"id": "ea-fc", "title": "EA Sports FC", "note": "", "cover": "covers/ea_fc.jpg", "theme": {"surface": "#0a120e", "panel": "#0e1c14", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#00ff87", "shape": "pill", "flair": "neon", "primary": "#00ff87", "primaryDim": "#008a4a", "accent": "#ffffff"}}], "F": [{"id": "fortnite", "title": "Fortnite", "note": "", "cover": "covers/fortnite.jpg", "theme": {"surface": "#120a1c", "panel": "#1c1030", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#c084fc", "shape": "pill", "flair": "neon", "primary": "#9d4dff", "primaryDim": "#4b1fa8", "accent": "#00f0ff"}}], "G": [{"id": "gears", "title": "Gears of War", "note": "", "cover": "covers/gears.jpg", "theme": {"surface": "#120c08", "panel": "#1c1410", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#e07030", "shape": "sharp", "flair": "military", "primary": "#c45c26", "primaryDim": "#6a2a0c", "accent": "#e8c49a"}}], "H": [{"id": "halo", "title": "Halo 3", "note": "", "cover": "covers/halo.jpg", "theme": {"surface": "#080c14", "panel": "#0e1624", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#4db8ff", "shape": "soft", "flair": "energy", "primary": "#5cb8ff", "primaryDim": "#1a5a9a", "accent": "#c4e8ff"}}], "I": [{"id": "injustice2", "title": "Injustice 2", "note": "", "cover": "covers/injustice2.jpg", "theme": {"surface": "#12080c", "panel": "#1c0c14", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#ff3d5c", "shape": "sharp", "flair": "comic", "primary": "#ff2d55", "primaryDim": "#8a1028", "accent": "#ffd166"}}], "J": [{"id": "jojo", "title": "JoJo's Bizarre Adventure: All-Star Battle R", "note": "", "cover": "covers/jojo.jpg", "theme": {"surface": "#14081a", "panel": "#220e2a", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#ff79d1", "shape": "pill", "flair": "comic", "primary": "#ff6bcb", "primaryDim": "#9a1a6a", "accent": "#ffe566"}}], "K": [{"id": "krunker", "title": "Krunker", "note": "", "cover": "covers/krunker.jpg", "theme": {"surface": "#08120c", "panel": "#0e1c14", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#39ff7a", "shape": "sharp", "flair": "pixel", "primary": "#3dff7a", "primaryDim": "#128a3a", "accent": "#b8ffd0"}}], "L": [{"id": "lol", "title": "League of Legends", "note": "", "cover": "covers/lol.jpg", "theme": {"surface": "#0a0c14", "panel": "#12162a", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#d4af37", "shape": "soft", "flair": "fantasy", "primary": "#c89b3c", "primaryDim": "#78581c", "accent": "#0ac8b9"}}], "M": [{"id": "minecraft", "title": "Minecraft Bedwars", "note": "", "cover": "covers/minecraft.jpg", "theme": {"surface": "#0c140a", "panel": "#142010", "fg": "#e8f5e0", "muted": "#9ab88a", "glow": "#7dce52", "shape": "sharp", "flair": "pixel", "primary": "#5d9c3e", "primaryDim": "#2e5a1c", "accent": "#c6a15b"}}], "N": [{"id": "naraka", "title": "Naraka: Bladepoint", "note": "", "cover": "covers/naraka.jpg", "theme": {"surface": "#120a08", "panel": "#1c100c", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#ff6b4a", "shape": "soft", "flair": "fantasy", "primary": "#e85d4c", "primaryDim": "#8a2818", "accent": "#f0c878"}}], "O": [{"id": "overwatch2", "title": "Overwatch 2", "note": "", "cover": "covers/overwatch2.jpg", "theme": {"surface": "#0e1018", "panel": "#161a28", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#ffb84d", "shape": "pill", "flair": "neon", "primary": "#f99e1a", "primaryDim": "#a85a08", "accent": "#ffffff"}}], "P": [{"id": "pubg", "title": "PUBG: Battlegrounds", "note": "", "cover": "covers/pubg.jpg", "theme": {"surface": "#101208", "panel": "#181a10", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#ffc107", "shape": "sharp", "flair": "military", "primary": "#f2a900", "primaryDim": "#8a5e00", "accent": "#e8e0c8"}}], "Q": [{"id": "quake", "title": "Quake Champions", "note": "", "cover": "covers/quake.jpg", "theme": {"surface": "#100808", "panel": "#1a0c0c", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#ff5722", "shape": "sharp", "flair": "energy", "primary": "#ff4500", "primaryDim": "#8a2000", "accent": "#ffcc00"}}], "R": [{"id": "rocket", "title": "Rocket League", "note": "", "cover": "covers/rocket.jpg", "theme": {"surface": "#080e16", "panel": "#0e1824", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#00c2ff", "shape": "soft", "flair": "neon", "primary": "#00a8e8", "primaryDim": "#005f8a", "accent": "#ff6b35"}}], "S": [{"id": "splitgate", "title": "Splitgate", "note": "", "cover": "covers/splitgate.jpg", "theme": {"surface": "#0a0a16", "panel": "#12122a", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#8b7cff", "shape": "soft", "flair": "energy", "primary": "#7b61ff", "primaryDim": "#3d2a9a", "accent": "#00e5ff"}}], "T": [{"id": "siege", "title": "Tom Clancy's Rainbow Six Siege", "note": "", "cover": "covers/siege.jpg", "theme": {"surface": "#0c0c0c", "panel": "#161616", "fg": "#f2f6ff", "muted": "#a0a0a0", "glow": "#ffd54f", "shape": "sharp", "flair": "military", "primary": "#ffd200", "primaryDim": "#8a7000", "accent": "#ffffff"}}], "U": [{"id": "uno", "title": "UNO", "note": "", "cover": "covers/uno.jpg", "theme": {"surface": "#140808", "panel": "#1c0c0c", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#ff3b3b", "shape": "pill", "flair": "comic", "primary": "#ed1c24", "primaryDim": "#8a0e12", "accent": "#ffde00"}}], "V": [{"id": "valorant", "title": "Valorant", "note": "", "cover": "covers/valorant.jpg", "theme": {"surface": "#0f1923", "panel": "#1a2733", "fg": "#ece8e1", "muted": "#8b978f", "glow": "#ff4655", "shape": "sharp", "flair": "neon", "primary": "#ff4655", "primaryDim": "#8a1a22", "accent": "#ece8e1"}}], "W": [{"id": "warships", "title": "World of Warships", "note": "", "cover": "covers/warships.jpg", "theme": {"surface": "#060c14", "panel": "#0c1624", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#4da3ff", "shape": "soft", "flair": "naval", "primary": "#3d8bfd", "primaryDim": "#1a4a8a", "accent": "#a8d4ff"}}], "X": [{"id": "xeno", "title": "Dragon Ball: Xenoverse 2", "note": "", "cover": "covers/xeno.jpg", "theme": {"surface": "#140c04", "panel": "#1c1408", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#ffb300", "shape": "soft", "flair": "energy", "primary": "#ff9800", "primaryDim": "#b35a00", "accent": "#ffeb3b"}}], "Y": [{"id": "yugioh", "title": "Yu-Gi-Oh! Master Duel", "note": "", "cover": "covers/yugioh.jpg", "theme": {"surface": "#0c0a12", "panel": "#16122a", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#e0c060", "shape": "soft", "flair": "fantasy", "primary": "#d4af37", "primaryDim": "#7a5c10", "accent": "#5b8def"}}], "Z": [{"id": "z1", "title": "Z1 Battle Royale", "note": "", "cover": "covers/z1.jpg", "theme": {"surface": "#0c100a", "panel": "#141a10", "fg": "#f2f6ff", "muted": "#9aabc4", "glow": "#aed581", "shape": "sharp", "flair": "military", "primary": "#9ccc65", "primaryDim": "#4a6e28", "accent": "#cfd8dc"}}]};
@@ -904,57 +932,112 @@ function prefersReducedMotion() {
       if (prefersReducedMotion()) return;
       if (!document.querySelector(".game-overlay")) return;
       animT0 = Date.now();
+
+      // Hidden canvas: drawing every frame forces OBS CEF to repaint
+      // (text timer updates repaint; pure CSS transform often does not)
+      var paint = document.getElementById("obs-paint");
+      if (!paint) {
+        paint = document.createElement("canvas");
+        paint.id = "obs-paint";
+        paint.width = 4;
+        paint.height = 4;
+        paint.setAttribute("aria-hidden", "true");
+        paint.style.cssText = "position:fixed;left:0;top:0;width:2px;height:2px;opacity:0.02;pointer-events:none;z-index:9999;";
+        document.body.appendChild(paint);
+      }
+      var ctx = paint.getContext("2d");
+
       function tick() {
         var t = (Date.now() - animT0) / 1000;
+        var frame = Math.floor(t * 20);
+
+        // Force OBS Browser Source composite/repaint every tick
+        try {
+          if (ctx) {
+            ctx.fillStyle = "rgb(" + (frame % 255) + ",40,80)";
+            ctx.fillRect(0, 0, 4, 4);
+          }
+          document.documentElement.style.setProperty("--obs-frame", String(frame));
+          // Title flicker forces layout in stubborn CEF builds
+          document.title = "AZ " + (frame % 1000);
+        } catch (e) {}
+
         document.querySelectorAll(".game-overlay").forEach(function (el) {
           var pulse = 0.5 + 0.5 * Math.sin(t * 2.4);
           var ring = el.querySelector(".pulse-ring");
           if (ring) {
-            ring.style.opacity = String(0.35 + pulse * 0.55);
-            ring.style.transform = "scale(" + (1 + pulse * 0.012) + ")";
+            ring.style.opacity = String(0.25 + pulse * 0.65);
+            // use outline-width style via boxShadow size in px only (no color-mix)
+            ring.style.transform = "scale(" + (1 + pulse * 0.02) + ")";
+          }
+          // slight whole-card nudge forces layer update
+          el.style.transform = "translateZ(0) translateY(" + (Math.sin(t * 1.2) * 1.5) + "px)";
+        });
+
+        document.querySelectorAll(".letter-box").forEach(function (box) {
+          var pulse = 0.5 + 0.5 * Math.sin(t * 2.8);
+          box.style.transform = "scale(" + (1 + pulse * 0.08) + ") rotate(" + (Math.sin(t * 1.5) * 2) + "deg)";
+        });
+
+        document.querySelectorAll(".cover").forEach(function (cover, i) {
+          cover.style.transform = "translateY(" + (Math.sin(t * 2 + i) * 6) + "px)";
+          var img = cover.querySelector("img");
+          if (img) {
+            img.style.transform = "scale(" + (1.02 + 0.04 * Math.sin(t * 1.1 + i)) + ")";
           }
         });
-        document.querySelectorAll(".letter-box").forEach(function (box) {
-          var pulse = 0.5 + 0.5 * Math.sin(t * 2.6);
-          box.style.transform = "scale(" + (1 + pulse * 0.06) + ")";
-          var span = box.querySelector("span");
-          if (span) span.style.filter = "brightness(" + (1 + pulse * 0.35) + ")";
-        });
-        document.querySelectorAll(".cover").forEach(function (cover, i) {
-          cover.style.transform = "translateY(" + (Math.sin(t * 1.8 + i) * 5) + "px)";
-          var img = cover.querySelector("img");
-          if (img) img.style.transform = "scale(" + (1 + (0.5 + 0.5 * Math.sin(t * 0.9 + i)) * 0.07) + ")";
-        });
+
         document.querySelectorAll(".shine-beam").forEach(function (beam, i) {
-          var cycle = (t * 0.35 + i * 0.2) % 1;
-          beam.style.left = (-50 + cycle * 180) + "%";
-          beam.style.opacity = String(cycle > 0.15 && cycle < 0.85 ? 0.7 : 0);
+          var cycle = (t * 0.4 + i * 0.2) % 1;
+          beam.style.left = (-60 + cycle * 200) + "%";
+          beam.style.opacity = String(cycle > 0.1 && cycle < 0.9 ? 0.85 : 0);
         });
+
         document.querySelectorAll(".spark").forEach(function (sp, i) {
-          var phase = t * (1.4 + i * 0.3) + i * 1.7;
-          var op = 0.3 + 0.6 * (0.5 + 0.5 * Math.sin(phase * 1.4));
-          sp.style.transform = "translate(" + (Math.cos(phase * 0.9) * 8) + "px," + (Math.sin(phase) * -14) + "px)";
-          sp.style.opacity = String(op);
+          var phase = t * (1.6 + i * 0.35) + i * 1.7;
+          sp.style.left = (20 + i * 25 + Math.cos(phase) * 6) + "%";
+          sp.style.top = (25 + i * 15 + Math.sin(phase) * 10) + "%";
+          sp.style.opacity = String(0.35 + 0.55 * (0.5 + 0.5 * Math.sin(phase * 1.3)));
+          sp.style.transform = "scale(" + (0.8 + 0.5 * Math.abs(Math.sin(phase))) + ")";
         });
-        document.querySelectorAll(".bar-fill").forEach(function (bar) {
-          bar.style.filter = "brightness(" + (1 + (0.5 + 0.5 * Math.sin(t * 3.2)) * 0.35) + ")";
-          var shim = bar.querySelector(".bar-shim");
-          if (shim) shim.style.transform = "translateX(" + (((t * 0.7) % 1) * 200 - 100) + "%)";
-        });
-        document.querySelectorAll(".aura-spin").forEach(function (aura) {
-          aura.style.transform = "rotate(" + ((t * 50) % 360) + "deg)";
-        });
+
         document.querySelectorAll(".scan-line").forEach(function (line) {
-          line.style.top = ((t * 40) % 120) + "%";
+          line.style.top = ((t * 55) % 130 - 15) + "%";
+          line.style.opacity = "0.55";
         });
+
+        document.querySelectorAll(".aura-spin").forEach(function (aura) {
+          aura.style.transform = "rotate(" + ((t * 60) % 360) + "deg)";
+          aura.style.opacity = String(0.3 + 0.2 * Math.sin(t * 2));
+        });
+
+        document.querySelectorAll(".bar-fill").forEach(function (bar) {
+          var shim = bar.querySelector(".bar-shim");
+          if (shim) {
+            shim.style.transform = "translateX(" + (((t * 0.85) % 1) * 220 - 110) + "%)";
+            shim.style.opacity = "1";
+          }
+        });
+
         document.querySelectorAll(".timer-panel .run-clock").forEach(function (clock) {
-          var pulse = 0.5 + 0.5 * Math.sin(t * 2);
-          clock.style.transform = "scale(" + (1 + pulse * 0.03) + ")";
+          var pulse = 0.5 + 0.5 * Math.sin(t * 2.2);
+          clock.style.transform = "scale(" + (1 + pulse * 0.04) + ")";
+          clock.style.letterSpacing = (0.02 + pulse * 0.02) + "em";
+        });
+
+        // Visible sliding edge light (very obvious motion for OBS QA)
+        document.querySelectorAll(".edge-runner").forEach(function (edge) {
+          var x = ((t * 0.5) % 1) * 100;
+          edge.style.left = x + "%";
+          edge.style.opacity = "0.9";
         });
       }
+
       tick();
-      animTimer = setInterval(tick, 50);
+      // 30fps-ish; more reliable than rAF in OBS
+      animTimer = setInterval(tick, 33);
     }
+
 
     
 
@@ -1445,6 +1528,7 @@ function prefersReducedMotion() {
 
     render();
 
+  
   
   </script>
 </body>
