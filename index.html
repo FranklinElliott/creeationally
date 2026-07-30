@@ -955,9 +955,10 @@
 
   
     
-    /* === TIMERS ON TOP + NO CLIP === */
+    
+    /* === TIMERS READABLE, NO BLACK BOX, FX FULL WIDTH === */
     .obs-fx {
-      z-index: 2 !important; /* under text/timers so they never get washed out */
+      z-index: 2 !important;
     }
     .letter-box, .cover, .main-col, .timer-panel {
       position: relative;
@@ -968,7 +969,7 @@
     }
     .game-overlay,
     .game-overlay.compact {
-      overflow: hidden !important; /* keep rounded card */
+      overflow: hidden !important;
       height: 188px !important;
       min-height: 188px !important;
       max-height: 188px !important;
@@ -996,8 +997,8 @@
       justify-content: center !important;
       align-items: flex-end !important;
       border-left: 1px solid color-mix(in srgb, var(--g-primary) 28%, transparent) !important;
-      background: linear-gradient(90deg, transparent, rgba(0,0,0,0.35) 30%) !important;
-      border-radius: 0 12px 12px 0;
+      background: transparent !important; /* no black box — FX show through */
+      border-radius: 0;
     }
     .timer-panel .timer-block {
       display: flex !important;
@@ -1019,7 +1020,10 @@
     }
     .timer-panel .game-time .label {
       color: #7dd3fc !important;
-      text-shadow: 0 0 8px rgba(125, 211, 252, 0.6) !important;
+      text-shadow:
+        0 0 1px #000,
+        0 1px 4px rgba(0,0,0,0.95),
+        0 0 10px rgba(125, 211, 252, 0.7) !important;
     }
     .timer-panel .game-time .run-clock,
     .timer-panel .game-clock {
@@ -1033,21 +1037,25 @@
       width: max-content !important;
       min-width: 7.2ch !important;
       line-height: 1.05 !important;
+      padding: 0 !important;
+      border: none !important;
+      border-radius: 0 !important;
+      background: transparent !important; /* no chip box */
       text-shadow:
-        0 0 1px #000,
-        0 1px 3px rgba(0,0,0,0.9),
-        0 0 12px rgba(125, 211, 252, 0.75) !important;
+        0 0 2px #000,
+        0 0 6px #000,
+        0 2px 4px rgba(0,0,0,0.95),
+        0 0 14px rgba(125, 211, 252, 0.85) !important;
       filter: none !important;
       opacity: 1 !important;
-      transform: none !important; /* avoid anim scale clipping */
+      transform: none !important;
       letter-spacing: 0.03em !important;
-      background: rgba(8, 20, 32, 0.55);
-      padding: 2px 6px;
-      border-radius: 6px;
-      border: 1px solid rgba(125, 211, 252, 0.35);
     }
     .timer-panel .total-time-block .label {
       color: color-mix(in srgb, var(--g-primary) 90%, #fff) !important;
+      text-shadow:
+        0 0 1px #000,
+        0 1px 4px rgba(0,0,0,0.95) !important;
     }
     .timer-panel .total-time-block .run-clock,
     .timer-panel .total-clock {
@@ -1061,18 +1069,19 @@
       width: max-content !important;
       min-width: 7.2ch !important;
       line-height: 1.05 !important;
+      padding: 0 !important;
+      border: none !important;
+      border-radius: 0 !important;
+      background: transparent !important;
       text-shadow:
-        0 0 1px #000,
-        0 1px 3px rgba(0,0,0,0.9),
-        0 0 12px color-mix(in srgb, var(--g-glow) 55%, transparent) !important;
+        0 0 2px #000,
+        0 0 6px #000,
+        0 2px 4px rgba(0,0,0,0.95),
+        0 0 14px color-mix(in srgb, var(--g-glow) 65%, transparent) !important;
       filter: none !important;
       opacity: 1 !important;
       transform: none !important;
       letter-spacing: 0.03em !important;
-      background: rgba(0, 0, 0, 0.45);
-      padding: 2px 6px;
-      border-radius: 6px;
-      border: 1px solid color-mix(in srgb, var(--g-primary) 40%, transparent);
     }
     .main-meta {
       max-width: calc(100% - 240px) !important;
@@ -1093,6 +1102,7 @@
 <body>
   <div id="app"></div>
   <script>
+
 
 
 
@@ -1158,12 +1168,6 @@ function prefersReducedMotion() {
         var w = dim.w, h = dim.h, dpr = dim.dpr;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, w, h);
-        // Leave right timer column clear of FX so clocks stay sharp
-        var timerSafe = Math.min(230, w * 0.28);
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(0, 0, Math.max(0, w - timerSafe), h);
-        ctx.clip();
 
         // Read theme color from CSS var
         var styles = getComputedStyle(overlay);
@@ -1225,8 +1229,6 @@ function prefersReducedMotion() {
         eg.addColorStop(1, "rgba(255,255,255,0)");
         ctx.fillStyle = eg;
         ctx.fillRect(0, 0, w, h);
-
-        ctx.restore();
 
         // DOM extras (works in normal browsers; canvas under text)
         document.querySelectorAll(".letter-box").forEach(function (box) {
@@ -1848,6 +1850,7 @@ function prefersReducedMotion() {
 
     render();
 
+  
   
   
   
