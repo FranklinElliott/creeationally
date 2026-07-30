@@ -420,8 +420,7 @@
       color: color-mix(in srgb, var(--g-primary) 92%, white);
       text-shadow: 0 0 12px color-mix(in srgb, var(--g-glow) 40%, transparent);
     }
-    .progress-label .ops { margin-left: 8px; opacity: 0.7; color: var(--g-muted); font-weight: 500; }
-    .title {
+        .title {
       font-size: 1.6rem; font-weight: 800; line-height: 1.15; color: var(--g-fg);
       text-shadow: 0 2px 10px rgba(0,0,0,.45), 0 0 20px color-mix(in srgb, var(--g-glow) 18%, transparent);
     }
@@ -849,9 +848,7 @@
         '<div class="letter-box"><span>' + letter + "</span></div>" +
         '<div class="cover" style="border-radius:' + coverR + '">' + coverInner + "</div>" +
         '<div class="info">' +
-        '<div class="progress-label">' + num + " / 26" +
-        (th.flair === "military" ? '<span class="ops">// OPS</span>' : "") +
-        "</div>" +
+        '<div class="progress-label">' + num + " / 26</div>" +
         '<div class="' + titleClass + '">' + escapeHtml(game.title) + "</div>" +
         noteBlock +
         customBlock +
