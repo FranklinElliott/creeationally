@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A-Z Marathon Overlay</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: transparent;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #fff;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .overlay {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      background: rgba(8, 10, 18, 0.82);
+      border: 1px solid rgba(0, 220, 255, 0.25);
+      border-radius: 18px;
+      padding: 22px 32px;
+      box-shadow: 0 0 40px rgba(0, 180, 255, 0.15), inset 0 0 30px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(8px);
+      animation: fadeIn 0.6s ease-out;
+      max-width: 920px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .letter-box {
+      flex-shrink: 0;
+      width: 110px;
+      height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(145deg, #0a1628, #06101c);
+      border: 2px solid rgba(0, 220, 255, 0.5);
+      border-radius: 16px;
+      box-shadow: 0 0 25px rgba(0, 200, 255, 0.35);
+      animation
