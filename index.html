@@ -119,21 +119,48 @@
       background: color-mix(in srgb, var(--pick, var(--primary)) 16%, #0a0e18);
     }
     .url-row { display: flex; flex-direction: column; gap: 10px; }
-    @media (min-width: 640px) { .url-row { flex-direction: row; } }
+    @media (min-width: 640px) { .url-row { flex-direction: row; align-items: stretch; } }
     .url-box {
       flex: 1; min-width: 0;
-      display: flex; align-items: center;
+      display: flex; align-items: stretch;
       border: 1px solid var(--border);
       background: var(--bg);
       border-radius: 12px;
-      padding: 12px 14px;
+      padding: 0;
       font-size: 12px;
       color: var(--muted);
+      overflow: hidden;
     }
-    .url-box code {
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    .url-box textarea {
+      width: 100%;
+      min-height: 72px;
+      resize: vertical;
+      border: none;
+      background: transparent;
       color: #dce8ff;
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      padding: 12px 14px;
+      word-break: break-all;
+      white-space: pre-wrap;
+    }
+    .url-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .url-actions .copy-btn { height: auto; min-height: 48px; flex: 1; }
+    .url-actions .secondary-btn {
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      border: 1px solid var(--border);
+      background: #141c2e;
+      color: var(--fg);
     }
     .copy-btn {
       height: 48px; padding: 0 18px;
@@ -273,10 +300,10 @@
       position: relative;
       display: flex;
       align-items: center;
-      gap: 14px;
-      width: 100%;
-      max-width: 560px;
-      padding: 14px 16px;
+      gap: 18px;
+      width: min(820px, 100%);
+      max-width: 820px;
+      padding: 18px 22px;
       overflow: hidden;
       border: 1px solid color-mix(in srgb, var(--g-primary) 45%, transparent);
       border-radius: var(--g-radius, 18px);
@@ -293,7 +320,7 @@
       backdrop-filter: blur(10px);
       animation: fadeUp .55s ease-out both;
     }
-    .game-overlay.compact { gap: 12px; padding: 12px 14px; max-width: 560px; animation: fadeUp .45s ease-out both; }
+    .game-overlay.compact { gap: 14px; padding: 14px 16px; max-width: 720px; animation: fadeUp .45s ease-out both; }
 
     .game-overlay::before {
       content: "";
@@ -362,7 +389,7 @@
     .letter-box {
       flex-shrink: 0;
       display: grid; place-items: center;
-      width: 68px; height: 68px;
+      width: 88px; height: 88px;
       border: 2px solid color-mix(in srgb, var(--g-primary) 60%, transparent);
       border-radius: var(--g-letter-radius, 16px);
       background:
@@ -373,10 +400,10 @@
         inset 0 0 20px color-mix(in srgb, var(--g-primary) 12%, transparent);
       /* pulse via JS for OBS */
     }
-    .compact .letter-box { width: 60px; height: 60px; }
+    .compact .letter-box { width: 72px; height: 72px; }
     .letter-box span {
       font-weight: 900;
-      font-size: 2.55rem;
+      font-size: 3.4rem;
       line-height: 1;
       letter-spacing: -2px;
       background: linear-gradient(180deg, #fff, var(--g-primary) 55%, var(--g-primary-dim));
@@ -386,11 +413,11 @@
       filter: drop-shadow(0 0 14px color-mix(in srgb, var(--g-glow) 60%, transparent));
       /* letter via JS for OBS */
     }
-    .compact .letter-box span { font-size: 2.2rem; }
+    .compact .letter-box span { font-size: 2.7rem; }
 
     .cover {
       flex-shrink: 0;
-      width: 78px; height: 104px;
+      width: 100px; height: 134px;
       overflow: hidden;
       border: 1px solid color-mix(in srgb, var(--g-primary) 35%, transparent);
       box-shadow:
@@ -399,7 +426,7 @@
       background: var(--g-panel);
       /* float via JS for OBS */
     }
-    .compact .cover { width: 70px; height: 94px; }
+    .compact .cover { width: 86px; height: 116px; }
     .cover img {
       width: 100%; height: 100%; object-fit: cover; display: block;
       transition: transform .6s ease;
@@ -417,12 +444,12 @@
       display: flex; flex-direction: column; gap: 6px; padding-right: 4px;
     }
     .progress-label {
-      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      font-size: 0.85rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
       color: color-mix(in srgb, var(--g-primary) 92%, white);
       text-shadow: 0 0 12px color-mix(in srgb, var(--g-glow) 40%, transparent);
     }
         .title {
-      font-size: clamp(1.05rem, 3.2vw, 1.35rem);
+      font-size: clamp(1.2rem, 2.4vw, 1.55rem);
       font-weight: 800;
       line-height: 1.2;
       color: var(--g-fg);
@@ -433,7 +460,7 @@
       overflow: hidden;
       max-width: 100%;
     }
-    .compact .title { font-size: clamp(1rem, 3vw, 1.2rem); }
+    .compact .title { font-size: clamp(1.1rem, 2.2vw, 1.35rem); }
     .title.comic { font-style: italic; }
     .title.pixel { text-transform: uppercase; letter-spacing: -0.02em; }
     .note {
@@ -441,7 +468,7 @@
       text-shadow: 0 0 10px color-mix(in srgb, var(--g-accent) 35%, transparent);
     }
     .custom-challenge {
-      font-size: 0.82rem;
+      font-size: 0.95rem;
       font-weight: 600;
       color: color-mix(in srgb, var(--g-fg) 90%, var(--g-primary));
       opacity: 0.95;
@@ -493,8 +520,8 @@
       flex-direction: column;
       align-items: flex-end;
       justify-content: flex-end;
-      min-width: 7.5rem;
-      max-width: 45%;
+      min-width: 9.5rem;
+      max-width: 42%;
       margin-left: 0;
       padding: 0 0 0 10px;
       border-left: 1px solid color-mix(in srgb, var(--g-primary) 28%, transparent);
@@ -516,7 +543,7 @@
     }
     .compact .timer-panel .label { font-size: 0.58rem; }
     .timer-panel .run-clock {
-      font-size: clamp(1.35rem, 4.5vw, 1.85rem);
+      font-size: clamp(1.7rem, 3.2vw, 2.35rem);
       font-weight: 900;
       letter-spacing: 0.02em;
       font-variant-numeric: tabular-nums;
@@ -527,11 +554,11 @@
         0 2px 8px rgba(0,0,0,.5);
       white-space: nowrap;
     }
-    .compact .timer-panel .run-clock { font-size: clamp(1.2rem, 4vw, 1.55rem); }
+    .compact .timer-panel .run-clock { font-size: clamp(1.4rem, 2.8vw, 1.85rem); }
     .timer-panel .run-clock.days {
-      font-size: clamp(1.1rem, 3.6vw, 1.45rem);
+      font-size: clamp(1.35rem, 2.8vw, 1.85rem);
     }
-    .compact .timer-panel .run-clock.days { font-size: clamp(1rem, 3.2vw, 1.25rem); }
+    .compact .timer-panel .run-clock.days { font-size: clamp(1.2rem, 2.5vw, 1.55rem); }
 
 
         .compact .timer-panel {
@@ -1037,11 +1064,11 @@
       document.body.className = "";
       document.documentElement.style.background = "";
       const idx = LETTERS.indexOf(letter);
-      const obs = new URL(location.href);
+      // Clean full overlay URL (no leftover junk params)
+      const obs = new URL(location.origin + location.pathname);
       obs.searchParams.set("letter", letter);
-      if (pick > 0) obs.searchParams.set("pick", String(pick));
-      else obs.searchParams.delete("pick");
       obs.searchParams.set("game", game.id);
+      if (pick > 0) obs.searchParams.set("pick", String(pick));
       obs.searchParams.set("mode", "overlay");
       applyRunStartToUrl(obs, runStart);
       applyChallengeToUrl(obs, challenge);
@@ -1126,11 +1153,13 @@
         '<div class="preview-wrap" style="background:radial-gradient(ellipse at center, color-mix(in srgb, ' + game.theme.primary + ' 18%, transparent), transparent 70%)">' +
         overlayHTML(letter, game, true, runStart, challenge) +
         "</div>" +
-        '<div class="url-row">' +
-        '<div class="url-box"><code id="urlText">' + escapeHtml(obsStr) + "</code></div>" +
-        '<button class="copy-btn" id="copy" style="background:' + game.theme.primary + '">Copy OBS URL</button>' +
-        "</div>" +
-        '<p class="hint">OBS → Browser Source → paste URL → width <strong>520–560</strong>, height <strong>160–180</strong> → transparent. Too narrow makes the title wrap weird. After changing timer or challenge, <strong>copy again</strong> so OBS gets the new URL.</p>' +
+                '<div class="url-row">' +
+        '<div class="url-box"><textarea id="urlText" readonly rows="3">' + escapeHtml(obsStr) + "</textarea></div>" +
+        '<div class="url-actions">' +
+        '<button class="copy-btn" id="copy" style="background:' + game.theme.primary + '">Copy full OBS URL</button>' +
+        '<button type="button" class="secondary-btn" id="selectUrl">Select all</button>' +
+        "</div></div>" +
+        '<p class="hint">OBS → Browser Source → paste the <strong>full</strong> URL → width <strong>800–900</strong>, height <strong>200–240</strong> → transparent background. Use the Copy button (don’t try to highlight the truncated text).</p>' +
         "</section>" +
         '<section class="card"><h2 style="margin-bottom:14px">All letters</h2><div class="letters" id="letters"></div></section>' +
         "</div>" +
@@ -1177,15 +1206,49 @@
         if (idx >= 25) return;
         setParams(LETTERS[idx + 1], 0, "control", runStart, challenge);
       };
-      document.getElementById("copy").onclick = async function () {
+      function fullObsUrl() {
+        const ta = document.getElementById("urlText");
+        return (ta && ta.value) ? ta.value : obsStr;
+      }
+
+      async function copyFullUrl() {
+        const text = fullObsUrl();
+        const btn = document.getElementById("copy");
         try {
-          await navigator.clipboard.writeText(obsStr);
-          const btn = document.getElementById("copy");
-          btn.textContent = "Copied";
-          setTimeout(function () { btn.textContent = "Copy OBS URL"; }, 1400);
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(text);
+          } else {
+            throw new Error("no clipboard api");
+          }
+          btn.textContent = "Copied full URL";
+          setTimeout(function () { btn.textContent = "Copy full OBS URL"; }, 1600);
         } catch (e) {
-          prompt("Copy this OBS URL:", obsStr);
+          // Fallback: select textarea so user can copy whole thing
+          const ta = document.getElementById("urlText");
+          if (ta) {
+            ta.focus();
+            ta.select();
+            ta.setSelectionRange(0, ta.value.length);
+            try {
+              const ok = document.execCommand("copy");
+              if (ok) {
+                btn.textContent = "Copied full URL";
+                setTimeout(function () { btn.textContent = "Copy full OBS URL"; }, 1600);
+                return;
+              }
+            } catch (e2) {}
+          }
+          window.prompt("Copy the FULL URL below (select all):", text);
         }
+      }
+
+      document.getElementById("copy").onclick = function () { copyFullUrl(); };
+      document.getElementById("selectUrl").onclick = function () {
+        const ta = document.getElementById("urlText");
+        if (!ta) return;
+        ta.focus();
+        ta.select();
+        ta.setSelectionRange(0, ta.value.length);
       };
 
       document.getElementById("startRun").onclick = function () {
