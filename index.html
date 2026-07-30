@@ -290,7 +290,7 @@
         0 18px 40px rgba(0,0,0,.45),
         inset 0 0 40px rgba(0,0,0,.28);
       backdrop-filter: blur(10px);
-      animation: fadeUp .55s ease-out both, borderPulse 3.2s ease-in-out infinite;
+      animation: fadeUp .55s ease-out both;
     }
     .game-overlay.compact { gap: 16px; padding: 14px 18px; max-width: 740px; animation: fadeUp .45s ease-out both; }
 
@@ -302,7 +302,7 @@
         transparent 0 40%,
         color-mix(in srgb, var(--g-primary) 35%, transparent) 48%,
         transparent 55% 100%);
-      animation: spinAura 8s linear infinite;
+      animation: none; /* aura via JS */
       opacity: 0.35;
       z-index: 0;
     }
@@ -370,7 +370,7 @@
       box-shadow:
         0 0 28px color-mix(in srgb, var(--g-glow) 50%, transparent),
         inset 0 0 20px color-mix(in srgb, var(--g-primary) 12%, transparent);
-      animation: pulseGlow 2.4s ease-in-out infinite;
+      /* pulse via JS for OBS */
     }
     .compact .letter-box { width: 76px; height: 76px; }
     .letter-box span {
@@ -383,7 +383,7 @@
       background-clip: text;
       color: transparent;
       filter: drop-shadow(0 0 14px color-mix(in srgb, var(--g-glow) 60%, transparent));
-      animation: letterPop 2.4s ease-in-out infinite;
+      /* letter via JS for OBS */
     }
     .compact .letter-box span { font-size: 3rem; }
 
@@ -396,13 +396,13 @@
         0 10px 28px rgba(0,0,0,.55),
         0 0 22px color-mix(in srgb, var(--g-glow) 25%, transparent);
       background: var(--g-panel);
-      animation: floatY 3.6s ease-in-out infinite;
+      /* float via JS for OBS */
     }
     .compact .cover { width: 88px; height: 118px; }
     .cover img {
       width: 100%; height: 100%; object-fit: cover; display: block;
       transition: transform .6s ease;
-      animation: coverZoom 8s ease-in-out infinite;
+      /* zoom via JS for OBS */
     }
     .cover .ph {
       width: 100%; height: 100%; display: grid; place-items: center;
@@ -475,7 +475,7 @@
       position: relative;
       background: linear-gradient(90deg, var(--g-primary-dim), var(--g-primary), color-mix(in srgb, var(--g-primary) 50%, white));
       box-shadow: 0 0 16px color-mix(in srgb, var(--g-glow) 65%, transparent);
-      animation: barGlow 2s ease-in-out infinite;
+      /* bar via JS for OBS */
     }
     .bar-fill::after {
       content: "";
@@ -534,6 +534,20 @@
       from { transform: translateX(-100%); }
       to { transform: translateX(100%); }
     }
+    
+    /* OBS-friendly: motion driven by JS (CSS keyframes often freeze in Browser Source) */
+    .game-overlay { will-change: box-shadow, filter; }
+    .letter-box { will-change: box-shadow, transform; }
+    .cover { will-change: transform; }
+    .cover img { will-change: transform; }
+    .shine::before {
+      will-change: left, opacity;
+      animation: none !important; /* JS moves this */
+    }
+    .spark { will-change: transform, opacity; animation: none !important; }
+    .bar-fill::after { animation: none !important; will-change: transform; }
+    .letter-box span { will-change: filter, transform; }
+
     @media (prefers-reduced-motion: reduce) {
       .game-overlay, .letter-box, .cover, .shine::before, .spark, .bar-fill, .bar-fill::after, .letter-box span, .cover img {
         animation: none !important;
@@ -551,6 +565,120 @@
     const RUN_KEY = "az_marathon_run_start";
     const CHAL_KEY = "az_marathon_challenge";
     let tickTimer = null;
+
+    let animRaf = null;
+    let animStart = 0;
+
+    function prefersReducedMotion() {
+      try {
+        return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function stopObsAnimations() {
+      if (animRaf) {
+        cancelAnimationFrame(animRaf);
+        animRaf = null;
+      }
+    }
+
+    // Drive motion with rAF so OBS Browser Source keeps updating (CSS keyframes often freeze there)
+    function startObsAnimations() {
+      stopObsAnimations();
+      if (prefersReducedMotion()) return;
+      animStart = performance.now();
+
+      function frame(now) {
+        const t = (now - animStart) / 1000;
+        const overlays = document.querySelectorAll(".game-overlay");
+        overlays.forEach(function (el) {
+          // pulse glow 0..1
+          const pulse = 0.5 + 0.5 * Math.sin(t * 2.2);
+          const glow = getComputedStyle(el).getPropertyValue("--g-glow").trim() || "#00ff88";
+          const primary = getComputedStyle(el).getPropertyValue("--g-primary").trim() || glow;
+          const strength = 28 + pulse * 42;
+          el.style.boxShadow =
+            "0 0 0 1px color-mix(in srgb, " + primary + " " + (18 + pulse * 22) + "%, transparent), " +
+            "0 0 " + strength + "px color-mix(in srgb, " + glow + " " + (22 + pulse * 28) + "%, transparent), " +
+            "0 18px 40px rgba(0,0,0,.45), inset 0 0 40px rgba(0,0,0,.28)";
+
+          // rotating aura on ::before via --spin if supported; also transform
+          el.style.setProperty("--spin", ((t * 45) % 360) + "deg");
+          const beforeProxy = el.querySelector(".aura-spin");
+          if (beforeProxy) {
+            beforeProxy.style.transform = "rotate(" + ((t * 40) % 360) + "deg)";
+          }
+        });
+
+        document.querySelectorAll(".letter-box").forEach(function (box) {
+          const pulse = 0.5 + 0.5 * Math.sin(t * 2.4);
+          const glow = getComputedStyle(box.parentElement || box).getPropertyValue("--g-glow").trim() || "#00ff88";
+          const primary = getComputedStyle(box.parentElement || box).getPropertyValue("--g-primary").trim() || glow;
+          box.style.boxShadow =
+            "0 0 " + (18 + pulse * 22) + "px color-mix(in srgb, " + glow + " " + (40 + pulse * 30) + "%, transparent), " +
+            "inset 0 0 20px color-mix(in srgb, " + primary + " 12%, transparent)";
+          box.style.transform = "scale(" + (1 + pulse * 0.03) + ")";
+          const span = box.querySelector("span");
+          if (span) {
+            span.style.filter = "drop-shadow(0 0 " + (10 + pulse * 12) + "px color-mix(in srgb, " + glow + " 70%, transparent))";
+            span.style.transform = "scale(" + (1 + pulse * 0.04) + ")";
+          }
+        });
+
+        document.querySelectorAll(".cover").forEach(function (cover, i) {
+          const y = Math.sin(t * 1.6 + i) * 6;
+          cover.style.transform = "translateY(" + y + "px)";
+          const img = cover.querySelector("img");
+          if (img) {
+            const z = 1 + (0.5 + 0.5 * Math.sin(t * 0.7 + i)) * 0.05;
+            img.style.transform = "scale(" + z + ")";
+          }
+        });
+
+        // shine sweep
+        document.querySelectorAll(".shine").forEach(function (shine, i) {
+          const cycle = ((t * 0.22 + i * 0.3) % 1);
+          // 0..1 map to left -40% .. 120%
+          let left = -40 + cycle * 160;
+          let op = 0;
+          if (cycle > 0.55 && cycle < 0.9) op = 0.75;
+          else if (cycle > 0.5) op = 0.2;
+          const beam = shine.querySelector(".shine-beam") || shine;
+          if (shine.querySelector(".shine-beam")) {
+            shine.querySelector(".shine-beam").style.left = left + "%";
+            shine.querySelector(".shine-beam").style.opacity = String(op);
+          } else {
+            shine.style.setProperty("--shine-left", left + "%");
+            shine.style.setProperty("--shine-op", String(op));
+          }
+        });
+
+        document.querySelectorAll(".spark").forEach(function (sp, i) {
+          const phase = t * (1.2 + i * 0.25) + i;
+          const y = Math.sin(phase) * -12;
+          const x = Math.cos(phase * 0.8) * 6;
+          const op = 0.35 + 0.55 * (0.5 + 0.5 * Math.sin(phase * 1.3));
+          sp.style.transform = "translate(" + x + "px," + y + "px) scale(" + (0.9 + op * 0.4) + ")";
+          sp.style.opacity = String(op);
+        });
+
+        document.querySelectorAll(".bar-fill").forEach(function (bar) {
+          const pulse = 0.5 + 0.5 * Math.sin(t * 3);
+          bar.style.filter = "brightness(" + (1 + pulse * 0.2) + ")";
+          const shim = bar.querySelector(".bar-shim");
+          if (shim) {
+            const x = ((t * 0.55) % 1) * 200 - 100;
+            shim.style.transform = "translateX(" + x + "%)";
+          }
+        });
+
+        animRaf = requestAnimationFrame(frame);
+      }
+      animRaf = requestAnimationFrame(frame);
+    }
+
 
     function escapeHtml(s) {
       return String(s)
@@ -717,7 +845,7 @@
         ";--g-letter-radius:" + letterRadius[th.shape] +
         '">' +
         flairHTML(th.flair) +
-        '<div class="scanlines"></div><div class="shine"></div>' + sparks +
+        '<div class="aura-spin"></div><div class="scanlines"></div><div class="shine"><div class="shine-beam"></div></div>' + sparks +
         '<div class="letter-box"><span>' + letter + "</span></div>" +
         '<div class="cover" style="border-radius:' + coverR + '">' + coverInner + "</div>" +
         '<div class="info">' +
@@ -728,7 +856,7 @@
         noteBlock +
         customBlock +
         timerBlock +
-        '<div class="bar" style="border-radius:' + barR + '"><div class="bar-fill" style="width:' + pct + '%;border-radius:inherit"></div></div>' +
+        '<div class="bar" style="border-radius:' + barR + '"><div class="bar-fill" style="width:' + pct + '%;border-radius:inherit"><div class="bar-shim"></div></div></div>' +
         "</div></div>"
       );
     }
