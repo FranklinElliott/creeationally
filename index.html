@@ -954,20 +954,22 @@
     }
 
   
-    /* Dual timers: full labels, no clip, distinct colors */
+    
+    /* === CURRENT GAME + TOTAL TIMERS (fixed, colored, no clip) === */
     .timer-panel {
-      flex: 0 0 200px !important;
-      width: 200px !important;
-      min-width: 200px !important;
-      max-width: 200px !important;
+      flex: 0 0 210px !important;
+      width: 210px !important;
+      min-width: 210px !important;
+      max-width: 210px !important;
       height: auto !important;
-      min-height: 72px !important;
+      min-height: 78px !important;
       max-height: none !important;
       gap: 10px !important;
-      padding: 0 0 0 14px !important;
+      padding: 2px 4px 2px 14px !important;
       overflow: visible !important;
       justify-content: center !important;
       align-items: flex-end !important;
+      border-left: 1px solid color-mix(in srgb, var(--g-primary) 28%, transparent) !important;
     }
     .timer-panel .timer-block {
       display: flex !important;
@@ -977,53 +979,59 @@
       overflow: visible !important;
     }
     .timer-panel .label {
-      font-size: 0.62rem !important;
-      letter-spacing: 0.12em !important;
+      font-size: 0.6rem !important;
+      letter-spacing: 0.1em !important;
       text-transform: uppercase !important;
       white-space: nowrap !important;
-      margin-bottom: 3px !important;
-      line-height: 1.1 !important;
+      margin-bottom: 2px !important;
+      line-height: 1.15 !important;
       opacity: 1 !important;
+      max-width: none !important;
+      overflow: visible !important;
     }
     .timer-panel .game-time .label {
-      color: #7dd3fc !important; /* light sky — current game */
-      text-shadow: 0 0 10px rgba(125, 211, 252, 0.55);
+      color: #7dd3fc !important;
+      text-shadow: 0 0 10px rgba(125, 211, 252, 0.55) !important;
     }
     .timer-panel .game-time .run-clock,
     .timer-panel .game-clock {
       color: #7dd3fc !important;
-      font-size: 1.35rem !important;
+      font-size: 1.32rem !important;
       font-weight: 900 !important;
       white-space: nowrap !important;
       overflow: visible !important;
       max-width: none !important;
-      text-shadow: 0 0 14px rgba(125, 211, 252, 0.65), 0 2px 6px rgba(0,0,0,.5) !important;
+      width: auto !important;
+      text-shadow: 0 0 14px rgba(125, 211, 252, 0.7), 0 2px 6px rgba(0,0,0,.55) !important;
       filter: none !important;
+      letter-spacing: 0.02em !important;
     }
     .timer-panel .total-time-block .label {
-      color: color-mix(in srgb, var(--g-primary) 90%, white) !important;
+      color: color-mix(in srgb, var(--g-primary) 88%, #fff) !important;
+      text-shadow: 0 0 8px color-mix(in srgb, var(--g-glow) 40%, transparent) !important;
     }
     .timer-panel .total-time-block .run-clock,
     .timer-panel .total-clock {
-      color: color-mix(in srgb, var(--g-primary) 92%, white) !important;
-      font-size: 1.35rem !important;
+      color: color-mix(in srgb, var(--g-primary) 92%, #fff) !important;
+      font-size: 1.32rem !important;
       font-weight: 900 !important;
       white-space: nowrap !important;
       overflow: visible !important;
       max-width: none !important;
+      width: auto !important;
     }
     .main-meta {
-      max-width: calc(100% - 220px) !important;
+      max-width: calc(100% - 230px) !important;
     }
-    /* slightly taller fixed card so two timers fit cleanly */
     .game-overlay,
     .game-overlay.compact {
-      height: 176px !important;
-      min-height: 176px !important;
-      max-height: 176px !important;
+      height: 180px !important;
+      min-height: 180px !important;
+      max-height: 180px !important;
     }
     body.overlay-mode #app {
-      height: 176px;
+      width: 860px;
+      height: 180px;
     }
 
   </style>
@@ -1614,7 +1622,7 @@ function prefersReducedMotion() {
         '<button class="copy-btn" id="copy" style="background:' + game.theme.primary + '">Copy full OBS URL</button>' +
         '<button type="button" class="secondary-btn" id="selectUrl">Select all</button>' +
         "</div></div>" +
-        '<p class="hint">OBS → Browser Source → paste the <strong>full</strong> URL → width <strong>860</strong>, height <strong>176</strong> (exact — overlay is fixed size) → transparent background. Use the Copy button (don’t try to highlight the truncated text).</p>' +
+        '<p class="hint">OBS → Browser Source → paste the <strong>full</strong> URL → width <strong>860</strong>, height <strong>180</strong> (exact — overlay is fixed size) → transparent background. Use the Copy button (don’t try to highlight the truncated text).</p>' +
         "</section>" +
         '<section class="card"><h2 style="margin-bottom:14px">All letters</h2><div class="letters" id="letters"></div></section>' +
         "</div>" +
