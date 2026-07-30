@@ -1097,11 +1097,44 @@
       align-items: center !important;
     }
 
+  
+    .long-game-flag {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      margin-top: 4px;
+      line-height: 1;
+      animation: longBob 1.1s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 9;
+    }
+    .long-game-flag .long-arrow {
+      font-size: 1.05rem;
+      color: #7dd3fc;
+      text-shadow: 0 0 8px rgba(125,211,252,0.8), 0 1px 2px #000;
+      transform: rotate(-90deg);
+      display: inline-block;
+    }
+    .long-game-flag .long-emoji {
+      font-size: 1.35rem;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+    }
+    .timer-block.game-time.is-long .run-clock {
+      box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.4);
+      border-radius: 6px;
+    }
+    @keyframes longBob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(3px); }
+    }
+
   </style>
 </head>
 <body>
   <div id="app"></div>
   <script>
+
 
 
 
@@ -1430,14 +1463,20 @@ function prefersReducedMotion() {
         ? '<img src="' + escapeHtml(coverSrc) + '" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'" /><div class="ph" style="display:none">' + letter + "</div>"
         : '<div class="ph">' + letter + "</div>";
       const elapsed = runStart ? formatDuration(Date.now() - runStart * 1000) : "";
-      const gameElapsed = gameStart ? formatDuration(Date.now() - gameStart * 1000) : "";
+      const gameElapsedMs = gameStart ? (Date.now() - gameStart * 1000) : 0;
+      const gameElapsed = gameStart ? formatDuration(gameElapsedMs) : "";
+      const gameLong = !!(gameStart && gameElapsedMs >= 5 * 60 * 60 * 1000);
       const timerPanel =
         '<div class="timer-panel">' +
-        '<div class="timer-block game-time">' +
+        '<div class="timer-block game-time' + (gameLong ? " is-long" : "") + '">' +
         '<div class="label">Current game</div>' +
         (gameStart
           ? '<div class="run-clock game-clock" data-game-start="' + gameStart + '">' + gameElapsed + "</div>"
           : '<div class="run-clock game-clock">--:--:--</div>') +
+        (gameLong
+          ? '<div class="long-game-flag" title="Over 5 hours on this game">' +
+            '<span class="long-arrow">➜</span><span class="long-emoji">😭</span></div>'
+          : "") +
         "</div>" +
         '<div class="timer-block total-time-block">' +
         '<div class="label">Total</div>' +
@@ -1510,6 +1549,28 @@ function prefersReducedMotion() {
             else el.classList.remove("days");
           }
         });
+
+        document.querySelectorAll(".game-clock[data-game-start]").forEach(function (el) {
+          var start = parseInt(el.getAttribute("data-game-start"), 10);
+          if (!start) return;
+          var ms = Date.now() - start * 1000;
+          var block = el.closest(".timer-block.game-time") || el.parentElement;
+          if (!block) return;
+          var long = ms >= 5 * 60 * 60 * 1000;
+          if (long) block.classList.add("is-long");
+          else block.classList.remove("is-long");
+          var flag = block.querySelector(".long-game-flag");
+          if (long && !flag) {
+            flag = document.createElement("div");
+            flag.className = "long-game-flag";
+            flag.title = "Over 5 hours on this game";
+            flag.innerHTML = '<span class="long-arrow">➜</span><span class="long-emoji">😭</span>';
+            block.appendChild(flag);
+          } else if (!long && flag) {
+            flag.remove();
+          }
+        });
+
       }, 250);
       startObsAnimations();
     }
@@ -1850,6 +1911,7 @@ function prefersReducedMotion() {
 
     render();
 
+  
   
   
   
