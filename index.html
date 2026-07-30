@@ -274,7 +274,7 @@
       display: flex;
       align-items: center;
       gap: 28px;
-      width: min(940px, 100%);
+      width: min(980px, 100%);
       padding: 24px 34px;
       overflow: hidden;
       border: 1px solid color-mix(in srgb, var(--g-primary) 45%, transparent);
@@ -292,7 +292,7 @@
       backdrop-filter: blur(10px);
       animation: fadeUp .55s ease-out both;
     }
-    .game-overlay.compact { gap: 16px; padding: 14px 18px; max-width: 740px; animation: fadeUp .45s ease-out both; }
+    .game-overlay.compact { gap: 12px; padding: 14px 16px; max-width: 780px; animation: fadeUp .45s ease-out both; }
 
     .game-overlay::before {
       content: "";
@@ -446,32 +446,53 @@
       color: var(--g-primary);
       opacity: 0.85;
     }
-    .total-time {
-      margin-top: 8px;
-      font-size: 1.85rem;
+
+    .timer-panel {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+      min-width: 168px;
+      margin-left: auto;
+      padding: 10px 14px 10px 18px;
+      border-left: 1px solid color-mix(in srgb, var(--g-primary) 28%, transparent);
+      text-align: right;
+    }
+    .compact .timer-panel {
+      min-width: 130px;
+      padding: 6px 8px 6px 12px;
+    }
+    .timer-panel .label {
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      opacity: 0.8;
+      color: color-mix(in srgb, var(--g-primary) 90%, white);
+      margin-bottom: 4px;
+    }
+    .compact .timer-panel .label { font-size: 0.62rem; }
+    .timer-panel .run-clock {
+      font-size: 2.35rem;
       font-weight: 900;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.03em;
       font-variant-numeric: tabular-nums;
-      line-height: 1.1;
+      line-height: 1;
       color: color-mix(in srgb, var(--g-primary) 92%, white);
       text-shadow:
-        0 0 18px color-mix(in srgb, var(--g-glow) 55%, transparent),
-        0 2px 8px rgba(0,0,0,.45);
+        0 0 22px color-mix(in srgb, var(--g-glow) 60%, transparent),
+        0 2px 10px rgba(0,0,0,.5);
+      white-space: nowrap;
     }
-    .compact .total-time { font-size: 1.35rem; margin-top: 6px; }
-    .total-time .label {
-      display: block;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      opacity: 0.78;
-      margin: 0 0 2px 0;
-      font-size: 0.55em;
+    .compact .timer-panel .run-clock { font-size: 1.55rem; }
+    .timer-panel .run-clock.days {
+      font-size: 1.95rem;
     }
-    .total-time .run-clock {
-      font-size: 1em;
-      font-weight: 900;
-    }
+    .compact .timer-panel .run-clock.days { font-size: 1.25rem; }
+    /* legacy class if any */
+    .total-time { display: none; }
+
     .bar {
       margin-top: 10px; height: 7px; width: 100%; overflow: hidden;
       background: color-mix(in srgb, var(--g-fg) 10%, transparent);
@@ -823,9 +844,16 @@
         ? '<img src="' + escapeHtml(coverSrc) + '" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'" /><div class="ph" style="display:none">' + letter + "</div>"
         : '<div class="ph">' + letter + "</div>";
       const elapsed = runStart ? formatDuration(Date.now() - runStart * 1000) : "";
-      const timerBlock = runStart
-        ? '<div class="total-time"><span class="label">Total</span><span class="run-clock" data-run-start="' + runStart + '">' + elapsed + "</span></div>"
-        : "";
+      const isDays = !!(elapsed && elapsed.indexOf("d ") >= 0);
+      const timerPanel = runStart
+        ? '<div class="timer-panel">' +
+          '<div class="label">Total</div>' +
+          '<div class="run-clock' + (isDays ? " days" : "") + '" data-run-start="' + runStart + '">' + elapsed + "</div>" +
+          "</div>"
+        : '<div class="timer-panel" style="opacity:.35">' +
+          '<div class="label">Total</div>' +
+          '<div class="run-clock">--:--:--</div>' +
+          "</div>";
       // built-in note + optional custom challenge
       const noteBlock = game.note
         ? '<div class="note">' + escapeHtml(game.note) + "</div>"
@@ -860,9 +888,10 @@
         '<div class="' + titleClass + '">' + escapeHtml(game.title) + "</div>" +
         noteBlock +
         customBlock +
-        timerBlock +
         '<div class="bar" style="border-radius:' + barR + '"><div class="bar-fill" style="width:' + pct + '%;border-radius:inherit"><div class="bar-shim"></div></div></div>' +
-        "</div></div>"
+        "</div>" +
+        timerPanel +
+        "</div>"
       );
     }
 
@@ -875,7 +904,12 @@
             if (el.classList.contains("control-run-clock")) el.textContent = "00:00:00";
             return;
           }
-          el.textContent = formatDuration(Date.now() - start * 1000);
+          const text = formatDuration(Date.now() - start * 1000);
+          el.textContent = text;
+          if (el.classList.contains("run-clock")) {
+            if (text.indexOf("d ") >= 0) el.classList.add("days");
+            else el.classList.remove("days");
+          }
         });
       }, 250);
       startObsAnimations();
