@@ -53,4 +53,209 @@
       border: 2px solid rgba(0, 220, 255, 0.5);
       border-radius: 16px;
       box-shadow: 0 0 25px rgba(0, 200, 255, 0.35);
-      animation
+      animation: pulse 2.8s ease-in-out infinite;
+    }
+
+    .letter {
+      font-size: 4.8rem;
+      font-weight: 800;
+      line-height: 1;
+      background: linear-gradient(180deg, #7afcff, #00b4ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 30px rgba(0, 200, 255, 0.6);
+      letter-spacing: -2px;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(0, 200, 255, 0.3); }
+      50% { box-shadow: 0 0 35px rgba(0, 220, 255, 0.55); }
+    }
+
+    .cover-wrap {
+      flex-shrink: 0;
+      width: 130px;
+      height: 174px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      animation: float 4s ease-in-out infinite;
+      background: #111;
+    }
+
+    .cover-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .cover-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(160deg, #1a2332, #0d1520);
+      font-size: 3.2rem;
+      font-weight: 700;
+      color: rgba(0, 200, 255, 0.35);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    .info {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 280px;
+    }
+
+    .progress {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #7ad4ff;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      opacity: 0.9;
+    }
+
+    .title {
+      font-size: 1.65rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #fff;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .note {
+      font-size: 1.05rem;
+      color: #ffb347;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .bar {
+      margin-top: 10px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00c6ff, #0072ff);
+      border-radius: 3px;
+      transition: width 0.8s ease;
+      box-shadow: 0 0 12px rgba(0, 180, 255, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay" id="overlay">
+    <div class="letter-box">
+      <div class="letter" id="letter">B</div>
+    </div>
+
+    <div class="cover-wrap" id="coverWrap">
+      <div class="cover-placeholder" id="coverPlaceholder">B</div>
+      <img id="coverImg" style="display:none;" alt="Cover" />
+    </div>
+
+    <div class="info">
+      <div class="progress" id="progress">2 / 26</div>
+      <div class="title" id="title">Call of Duty: Black Ops II</div>
+      <div class="note" id="note">Hit a Trickshot</div>
+      <div class="bar">
+        <div class="bar-fill" id="barFill" style="width: 7.7%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const games = {
+      A: { title: "Apex Legends", note: "", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/1172470/library_600x900.jpg" },
+      B: { title: "Call of Duty: Black Ops II", note: "Hit a Trickshot", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/202970/library_600x900.jpg" },
+      C: { title: "Counter-Strike 2", note: "", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/730/library_600x900.jpg" },
+      D: { title: "Destiny 2", note: "Trials Flawless? / Rumble (maybe 3 in a row)", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/1085660/library_600x900.jpg" },
+      E: { title: "Clair Obscur: Expedition 33", note: "Beat Simon / EA Sports", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/1903340/library_600x900.jpg" },
+      F: { title: "Fortnite", note: "", img: null },
+      G: { title: "Gears of War", note: "", img: null },
+      H: { title: "Halo 3", note: "", img: null },
+      I: { title: "Injustice 2", note: "", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/627270/library_600x900.jpg" },
+      J: { title: "JoJo's Bizarre Adventure: All-Star Battle R", note: "", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/1372110/library_600x900.jpg" },
+      K: { title: "Krunker", note: "", img: null },
+      L: { title: "League of Legends", note: "", img: null },
+      M: { title: "Minecraft Bedwars", note: "", img: null },
+      N: { title: "Naraka: Bladepoint", note: "", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/1203220/library_600x900.jpg" },
+      O: { title: "Overwatch 2", note: "", img: null },
+      P: { title: "PUBG: Battlegrounds", note: "", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/578080/library_600x900.jpg" },
+      Q: { title: "Quake Champions", note: "", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/386180/library_600x900.jpg" },
+      R: { title: "Rocket League", note: "", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/252950/library_600x900.jpg" },
+      S: { title: "Splitgate", note: "", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/677620/library_600x900.jpg" },
+      T: { title: "Tom Clancy's Rainbow Six Siege", note: "", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/359550/library_600x900.jpg" },
+      U: { title: "UNO", note: "", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/470220/library_600x900.jpg" },
+      V: { title: "Valorant", note: "", img: null },
+      W: { title: "World of Warships", note: "", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/552990/library_600x900.jpg" },
+      X: { title: "Dragon Ball: Xenoverse 2", note: "", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/454650/library_600x900.jpg" },
+      Y: { title: "Yu-Gi-Oh! Master Duel", note: "", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/1449850/library_600x900.jpg" },
+      Z: { title: "Z1 Battle Royale", note: "", img: null }
+    };
+
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    function updateOverlay() {
+      const params = new URLSearchParams(window.location.search);
+      let letter = (params.get("letter") || "B").toUpperCase();
+
+      if (!games[letter]) {
+        letter = "B";
+      }
+
+      const game = games[letter];
+      const index = letters.indexOf(letter);
+      const progressNum = index + 1;
+      const progressPct = (progressNum / 26) * 100;
+
+      document.getElementById("letter").textContent = letter;
+      document.getElementById("title").textContent = game.title;
+      document.getElementById("progress").textContent = progressNum + " / 26";
+      document.getElementById("barFill").style.width = progressPct + "%";
+
+      const noteEl = document.getElementById("note");
+      if (game.note) {
+        noteEl.textContent = game.note;
+        noteEl.style.display = "block";
+      } else {
+        noteEl.style.display = "none";
+      }
+
+      const imgEl = document.getElementById("coverImg");
+      const placeholder = document.getElementById("coverPlaceholder");
+
+      if (game.img) {
+        imgEl.src = game.img;
+        imgEl.style.display = "block";
+        placeholder.style.display = "none";
+        imgEl.onerror = function() {
+          imgEl.style.display = "none";
+          placeholder.style.display = "flex";
+          placeholder.textContent = letter;
+        };
+      } else {
+        imgEl.style.display = "none";
+        placeholder.style.display = "flex";
+        placeholder.textContent = letter;
+      }
+    }
+
+    updateOverlay();
+    window.addEventListener("popstate", updateOverlay);
+  </script>
+</body>
+</html>
