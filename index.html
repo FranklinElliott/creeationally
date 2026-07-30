@@ -925,11 +925,40 @@
     .motion-note strong { color: var(--primary); }
     .motion-note a { color: var(--primary); font-weight: 700; }
 
+  
+    .timer-panel {
+      flex: 0 0 168px !important;
+      width: 168px !important;
+      min-width: 168px !important;
+      max-width: 168px !important;
+      height: auto !important;
+      min-height: 52px !important;
+      gap: 8px !important;
+      justify-content: center !important;
+    }
+    .timer-panel .timer-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      width: 100%;
+    }
+    .timer-panel .run-clock,
+    .timer-panel .run-clock.days {
+      font-size: 1.2rem !important;
+    }
+    .timer-panel .label {
+      font-size: 0.58rem !important;
+    }
+    .main-meta {
+      max-width: calc(100% - 180px) !important;
+    }
+
   </style>
 </head>
 <body>
   <div id="app"></div>
   <script>
+
 
 
 
@@ -942,6 +971,7 @@
     const letterRadius = { sharp: "6px", soft: "16px", pill: "999px" };
     const RUN_KEY = "az_marathon_run_start";
     const CHAL_KEY = "az_marathon_challenge";
+    const GAME_KEY = "az_marathon_game_start";
     let tickTimer = null;
     let animTimer = null;
     let animT0 = 0;
@@ -1126,6 +1156,22 @@ function prefersReducedMotion() {
       } catch (e) {}
     }
 
+    
+    function readStoredGameStart() {
+      try {
+        var v = localStorage.getItem(GAME_KEY);
+        if (!v) return null;
+        var n = parseInt(v, 10);
+        return Number.isFinite(n) && n > 0 ? n : null;
+      } catch (e) { return null; }
+    }
+    function writeStoredGameStart(ts) {
+      try {
+        if (ts) localStorage.setItem(GAME_KEY, String(ts));
+        else localStorage.removeItem(GAME_KEY);
+      } catch (e) {}
+    }
+
     function readStoredChallenge() {
       try { return localStorage.getItem(CHAL_KEY) || ""; } catch (e) { return ""; }
     }
@@ -1166,13 +1212,29 @@ function prefersReducedMotion() {
       if (!challenge) challenge = readStoredChallenge();
       challenge = String(challenge).trim().slice(0, 120);
 
-      return { letter, pick, mode, runStart, challenge };
+      let gameStart = null;
+      const gameParam = p.get("gameStart") || p.get("gameTimer");
+      if (gameParam) {
+        const gn = parseInt(gameParam, 10);
+        if (Number.isFinite(gn) && gn > 1000000000) {
+          gameStart = gn > 1e12 ? Math.floor(gn / 1000) : gn;
+        }
+      }
+      if (!gameStart) gameStart = readStoredGameStart();
+
+      return { letter, pick, mode, runStart, challenge, gameStart };
     }
 
     function applyRunStartToUrl(u, runStart) {
       if (runStart) u.searchParams.set("runStart", String(runStart));
       else u.searchParams.delete("runStart");
       u.searchParams.delete("start");
+    }
+
+    function applyGameStartToUrl(u, gameStart) {
+      if (gameStart) u.searchParams.set("gameStart", String(gameStart));
+      else u.searchParams.delete("gameStart");
+      u.searchParams.delete("gameTimer");
     }
 
     function applyChallengeToUrl(u, challenge) {
@@ -1213,7 +1275,7 @@ function prefersReducedMotion() {
       return "";
     }
 
-    function overlayHTML(letter, game, compact, runStart, challenge) {
+    function overlayHTML(letter, game, compact, runStart, challenge, gameStart) {
       const th = game.theme;
       const { num, pct } = progressOf(letter);
       const coverR = th.shape === "pill" ? "14px" : th.shape === "sharp" ? "4px" : "10px";
@@ -1224,16 +1286,22 @@ function prefersReducedMotion() {
         ? '<img src="' + escapeHtml(coverSrc) + '" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'" /><div class="ph" style="display:none">' + letter + "</div>"
         : '<div class="ph">' + letter + "</div>";
       const elapsed = runStart ? formatDuration(Date.now() - runStart * 1000) : "";
-      const isDays = !!(elapsed && elapsed.indexOf("d ") >= 0);
-      const timerPanel = runStart
-        ? '<div class="timer-panel">' +
-          '<div class="label">Total</div>' +
-          '<div class="run-clock' + (isDays ? " days" : "") + '" data-run-start="' + runStart + '">' + elapsed + "</div>" +
-          "</div>"
-        : '<div class="timer-panel" style="opacity:.35">' +
-          '<div class="label">Total</div>' +
-          '<div class="run-clock">--:--:--</div>' +
-          "</div>";
+      const gameElapsed = gameStart ? formatDuration(Date.now() - gameStart * 1000) : "";
+      const timerPanel =
+        '<div class="timer-panel">' +
+        '<div class="timer-block">' +
+        '<div class="label">Game</div>' +
+        (gameStart
+          ? '<div class="run-clock game-clock" data-game-start="' + gameStart + '">' + gameElapsed + "</div>"
+          : '<div class="run-clock game-clock">--:--:--</div>') +
+        "</div>" +
+        '<div class="timer-block">' +
+        '<div class="label">Total</div>' +
+        (runStart
+          ? '<div class="run-clock total-clock" data-run-start="' + runStart + '">' + elapsed + "</div>"
+          : '<div class="run-clock total-clock">--:--:--</div>') +
+        "</div>" +
+        "</div>";
       // built-in note + optional custom challenge
       const noteBlock = game.note
         ? '<div class="note challenge-slot">' + escapeHtml(game.note) + "</div>"
@@ -1281,13 +1349,17 @@ function prefersReducedMotion() {
     function startTicking() {
       if (tickTimer) clearInterval(tickTimer);
       tickTimer = setInterval(function () {
-        document.querySelectorAll(".run-clock, .control-run-clock").forEach(function (el) {
-          const start = parseInt(el.getAttribute("data-run-start"), 10);
+        document.querySelectorAll(".run-clock, .control-run-clock, .control-game-clock").forEach(function (el) {
+          var start = parseInt(el.getAttribute("data-run-start") || el.getAttribute("data-game-start"), 10);
           if (!start) {
-            if (el.classList.contains("control-run-clock")) el.textContent = "00:00:00";
+            if (el.classList.contains("control-run-clock") || el.classList.contains("control-game-clock") || el.classList.contains("run-clock")) {
+              if (!el.getAttribute("data-run-start") && !el.getAttribute("data-game-start")) {
+                if (el.textContent === "" || el.textContent.indexOf("-") >= 0) el.textContent = "--:--:--";
+              }
+            }
             return;
           }
-          const text = formatDuration(Date.now() - start * 1000);
+          var text = formatDuration(Date.now() - start * 1000);
           el.textContent = text;
           if (el.classList.contains("run-clock")) {
             if (text.indexOf("d ") >= 0) el.classList.add("days");
@@ -1298,10 +1370,11 @@ function prefersReducedMotion() {
       startObsAnimations();
     }
 
-    function setParams(letter, pick, mode, runStart, challenge) {
+    function setParams(letter, pick, mode, runStart, challenge, gameStart) {
       const cur = getParams();
       if (runStart === undefined) runStart = cur.runStart;
       if (challenge === undefined) challenge = cur.challenge;
+      if (gameStart === undefined) gameStart = cur.gameStart;
       const u = new URL(location.href);
       u.searchParams.set("letter", letter);
       if (pick > 0) u.searchParams.set("pick", String(pick));
@@ -1311,6 +1384,7 @@ function prefersReducedMotion() {
       if (mode === "overlay") u.searchParams.set("mode", "overlay");
       else u.searchParams.delete("mode");
       applyRunStartToUrl(u, runStart);
+      applyGameStartToUrl(u, gameStart);
       applyChallengeToUrl(u, challenge);
       history.replaceState(null, "", u);
       render();
@@ -1326,7 +1400,7 @@ function prefersReducedMotion() {
     }
 
     function render() {
-      const { letter, pick, mode, runStart, challenge } = getParams();
+      const { letter, pick, mode, runStart, challenge, gameStart } = getParams();
       const opts = DATA[letter];
       const game = opts[pick];
       const app = document.getElementById("app");
@@ -1334,7 +1408,7 @@ function prefersReducedMotion() {
       if (mode === "overlay") {
         document.body.className = "overlay-mode";
         document.documentElement.style.background = "transparent";
-        app.innerHTML = overlayHTML(letter, game, false, runStart, challenge);
+        app.innerHTML = overlayHTML(letter, game, false, runStart, challenge, gameStart);
         startTicking();
         startObsAnimations();
         return;
@@ -1350,6 +1424,7 @@ function prefersReducedMotion() {
       if (pick > 0) obs.searchParams.set("pick", String(pick));
       obs.searchParams.set("mode", "overlay");
       applyRunStartToUrl(obs, runStart);
+      applyGameStartToUrl(obs, gameStart);
       applyChallengeToUrl(obs, challenge);
       const obsStr = obs.toString();
 
@@ -1368,8 +1443,16 @@ function prefersReducedMotion() {
           "</div>";
       }
 
+      const gameClockVal = gameStart ? formatDuration(Date.now() - gameStart * 1000) : "00:00:00";
       const clockVal = runStart ? formatDuration(Date.now() - runStart * 1000) : "00:00:00";
-      // prefill elapsed from current runStart
+      let gd = 0, gh = 0, gm = 0, gs = 0;
+      if (gameStart) {
+        const gSec = Math.max(0, Math.floor(Date.now() / 1000 - gameStart));
+        gd = Math.floor(gSec / 86400);
+        gh = Math.floor((gSec % 86400) / 3600);
+        gm = Math.floor((gSec % 3600) / 60);
+        gs = gSec % 60;
+      }
       let ed = 0, eh = 0, em = 0, es = 0;
       if (runStart) {
         const totalSec = Math.max(0, Math.floor(Date.now() / 1000 - runStart));
@@ -1382,22 +1465,40 @@ function prefersReducedMotion() {
       const timerHtml =
         '<div class="timer-card">' +
         '<div class="timer-head">' +
-        '<div><div class="field-hint" style="margin-bottom:4px">Whole-run total (this stream only)</div>' +
+        '<div><div class="field-hint" style="margin-bottom:4px">Current game</div>' +
+        '<div class="clock control-game-clock" data-game-start="' + (gameStart || "") + '">' + gameClockVal + "</div></div>" +
+        '<div class="timer-actions" style="margin-left:auto">' +
+        '<button type="button" class="primary" id="startGame" style="background:' + game.theme.primary + '">' +
+        (gameStart ? "Restart game timer" : "Start game timer") + "</button>" +
+        (gameStart ? '<button type="button" id="clearGame">Clear game</button>' : "") +
+        "</div></div>" +
+        '<div class="elapsed-row">' +
+        '<label>Days<input id="gd" type="number" min="0" max="365" value="' + gd + '" /></label>' +
+        '<label>Hours<input id="gh" type="number" min="0" max="23" value="' + gh + '" /></label>' +
+        '<label>Mins<input id="gm" type="number" min="0" max="59" value="' + gm + '" /></label>' +
+        '<label>Secs<input id="gs" type="number" min="0" max="59" value="' + gs + '" /></label>' +
+        '<button type="button" class="primary" id="applyGameElapsed" style="background:' + game.theme.primary + ';height:42px">Set game time in</button>' +
+        "</div>" +
+        '<p class="field-hint" style="margin-top:8px">Resets when you change letter (auto). Or set time already spent on this game.</p>' +
+        '<hr style="border:none;border-top:1px solid var(--border);margin:12px 0" />' +
+        '<div class="timer-head">' +
+        '<div><div class="field-hint" style="margin-bottom:4px">Whole-run total</div>' +
         '<div class="clock control-run-clock" data-run-start="' + (runStart || "") + '">' + clockVal + "</div></div>" +
         '<div class="timer-actions" style="margin-left:auto">' +
         '<button type="button" class="primary" id="startRun" style="background:' + game.theme.primary + '">' +
-        (runStart ? "Restart from 0" : "Start now") + "</button>" +
-        (runStart ? '<button type="button" id="clearRun">Clear</button>' : "") +
+        (runStart ? "Restart total from 0" : "Start total now") + "</button>" +
+        (runStart ? '<button type="button" id="clearRun">Clear total</button>' : "") +
         "</div></div>" +
         '<div class="elapsed-row">' +
         '<label>Days<input id="ed" type="number" min="0" max="365" value="' + ed + '" /></label>' +
         '<label>Hours<input id="eh" type="number" min="0" max="23" value="' + eh + '" /></label>' +
         '<label>Mins<input id="em" type="number" min="0" max="59" value="' + em + '" /></label>' +
         '<label>Secs<input id="es" type="number" min="0" max="59" value="' + es + '" /></label>' +
-        '<button type="button" class="primary" id="applyElapsed" style="background:' + game.theme.primary + ';height:42px">Set time already in</button>' +
+        '<button type="button" class="primary" id="applyElapsed" style="background:' + game.theme.primary + ';height:42px">Set total time in</button>' +
         "</div>" +
-        '<p class="field-hint" style="margin-top:8px">Runs can last days. Type days + time so far, hit <strong>Set time already in</strong>, then re-copy the OBS URL.</p>' +
+        '<p class="field-hint" style="margin-top:8px">Full marathon time across all letters. Days supported.</p>' +
         "</div>";
+
 
       const challengeHtml =
         '<div class="challenge-card">' +
@@ -1431,7 +1532,7 @@ function prefersReducedMotion() {
         challengeHtml +
         picksHtml +
         '<div class="preview-wrap" style="background:radial-gradient(ellipse at center, color-mix(in srgb, ' + game.theme.primary + ' 18%, transparent), transparent 70%)">' +
-        overlayHTML(letter, game, true, runStart, challenge) +
+        overlayHTML(letter, game, true, runStart, challenge, gameStart) +
         "</div>" +
                 '<div class="url-row">' +
         '<div class="url-box"><textarea id="urlText" readonly rows="3">' + escapeHtml(obsStr) + "</textarea></div>" +
@@ -1468,23 +1569,23 @@ function prefersReducedMotion() {
           '<strong style="color:' + (active ? g0.theme.primary : g0.theme.fg) + '">' + L +
           "</strong><span>" + escapeHtml(title) + "</span>" +
           (options.length > 1 ? '<span class="multi">' + options.length + " options</span>" : "");
-        b.onclick = function () { setParams(L, 0, "control", runStart, challenge); };
+        b.onclick = function () { (function(){ var gs = Math.floor(Date.now()/1000); writeStoredGameStart(gs); setParams(L, 0, "control", runStart, challenge, gs); })(); };
         lettersEl.appendChild(b);
       });
 
       document.querySelectorAll(".pick-btn").forEach(function (btn) {
         btn.onclick = function () {
-          setParams(letter, parseInt(btn.getAttribute("data-pick"), 10), "control", runStart, challenge);
+          (function(){ var gs = Math.floor(Date.now()/1000); writeStoredGameStart(gs); setParams(letter, parseInt(btn.getAttribute("data-pick"), 10), "control", runStart, challenge, gs); })();
         };
       });
 
       document.getElementById("prev").onclick = function () {
         if (idx <= 0) return;
-        setParams(LETTERS[idx - 1], 0, "control", runStart, challenge);
+        (function(){ var gs = Math.floor(Date.now()/1000); writeStoredGameStart(gs); setParams(LETTERS[idx - 1], 0, "control", runStart, challenge, gs); })();
       };
       document.getElementById("next").onclick = function () {
         if (idx >= 25) return;
-        setParams(LETTERS[idx + 1], 0, "control", runStart, challenge);
+        (function(){ var gs = Math.floor(Date.now()/1000); writeStoredGameStart(gs); setParams(LETTERS[idx + 1], 0, "control", runStart, challenge, gs); })();
       };
       function fullObsUrl() {
         const ta = document.getElementById("urlText");
@@ -1531,16 +1632,45 @@ function prefersReducedMotion() {
         ta.setSelectionRange(0, ta.value.length);
       };
 
+      
+      var startGameBtn = document.getElementById("startGame");
+      if (startGameBtn) {
+        startGameBtn.onclick = function () {
+          var now = Math.floor(Date.now() / 1000);
+          writeStoredGameStart(now);
+          setParams(letter, pick, "control", runStart, challenge, now);
+        };
+      }
+      var clearGameBtn = document.getElementById("clearGame");
+      if (clearGameBtn) {
+        clearGameBtn.onclick = function () {
+          writeStoredGameStart(null);
+          setParams(letter, pick, "control", runStart, challenge, null);
+        };
+      }
+      var applyGameElapsedBtn = document.getElementById("applyGameElapsed");
+      if (applyGameElapsedBtn) {
+        applyGameElapsedBtn.onclick = function () {
+          var d = parseInt(document.getElementById("gd").value, 10) || 0;
+          var h = parseInt(document.getElementById("gh").value, 10) || 0;
+          var m = parseInt(document.getElementById("gm").value, 10) || 0;
+          var s = parseInt(document.getElementById("gs").value, 10) || 0;
+          var gs = runStartFromElapsed(d, h, m, s);
+          writeStoredGameStart(gs);
+          setParams(letter, pick, "control", runStart, challenge, gs);
+        };
+      }
+
       document.getElementById("startRun").onclick = function () {
         const now = Math.floor(Date.now() / 1000);
         writeStoredRunStart(now);
-        setParams(letter, pick, "control", now, challenge);
+        setParams(letter, pick, "control", now, challenge, gameStart);
       };
       const clearRun = document.getElementById("clearRun");
       if (clearRun) {
         clearRun.onclick = function () {
           writeStoredRunStart(null);
-          setParams(letter, pick, "control", null, challenge);
+          setParams(letter, pick, "control", null, challenge, gameStart);
         };
       }
       document.getElementById("applyElapsed").onclick = function () {
@@ -1550,17 +1680,17 @@ function prefersReducedMotion() {
         const s = parseInt(document.getElementById("es").value, 10) || 0;
         const rs = runStartFromElapsed(d, h, m, s);
         writeStoredRunStart(rs);
-        setParams(letter, pick, "control", rs, challenge);
+        setParams(letter, pick, "control", rs, challenge, gameStart);
       };
       document.getElementById("applyChallenge").onclick = function () {
         const text = (document.getElementById("challengeInput").value || "").trim().slice(0, 120);
         writeStoredChallenge(text);
-        setParams(letter, pick, "control", runStart, text);
+        setParams(letter, pick, "control", runStart, text, gameStart);
       };
       document.getElementById("clearChallenge").onclick = function () {
         writeStoredChallenge("");
         document.getElementById("challengeInput").value = "";
-        setParams(letter, pick, "control", runStart, "");
+        setParams(letter, pick, "control", runStart, "", gameStart);
       };
 
       startTicking();
@@ -1576,6 +1706,7 @@ function prefersReducedMotion() {
 
     render();
 
+  
   
   
   
