@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache" />
   <title>A–Z Marathon Overlay</title>
   <style>
 
@@ -728,8 +729,7 @@
     let tickTimer = null;
     let animTimer = null;
     let animT0 = 0;
-
-    function prefersReducedMotion() {
+function prefersReducedMotion() {
       try { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
       catch (e) { return false; }
     }
@@ -1279,6 +1279,8 @@
     setInterval(function () {
       if (document.querySelector(".game-overlay") && !animTimer) startObsAnimations();
     }, 2000);
+
+    render();
 
   </script>
 </body>
