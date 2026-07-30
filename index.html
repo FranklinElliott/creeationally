@@ -873,6 +873,7 @@
           el.textContent = formatDuration(Date.now() - start * 1000);
         });
       }, 250);
+      startObsAnimations();
     }
 
     function setParams(letter, pick, mode, runStart, challenge) {
@@ -913,6 +914,7 @@
         document.documentElement.style.background = "transparent";
         app.innerHTML = overlayHTML(letter, game, false, runStart, challenge);
         startTicking();
+        startObsAnimations();
         return;
       }
 
@@ -1103,6 +1105,7 @@
       };
 
       startTicking();
+        startObsAnimations();
     }
 
     render();
