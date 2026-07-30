@@ -292,6 +292,55 @@
       from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    .total-time {
+      margin-top: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      font-variant-numeric: tabular-nums;
+      color: color-mix(in srgb, var(--g-primary) 85%, white);
+    }
+    .compact .total-time { font-size: 0.85rem; }
+    .total-time .label {
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.75;
+      margin-right: 8px;
+      font-size: 0.78em;
+    }
+    .timer-card {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .timer-card .clock {
+      font-size: 1.35rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+      min-width: 7.5rem;
+    }
+    .timer-card .timer-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+    .timer-card button {
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: #141c2e;
+      color: var(--fg);
+    }
+    .timer-card button.primary { border: none; color: #071018; }
+    .timer-card .hint-inline { width: 100%; font-size: 11px; color: var(--muted); margin: 0; }
     @media (prefers-reduced-motion: reduce) {
       .game-overlay, .letter-box, .cover { animation: none !important; }
     }
@@ -314,6 +363,37 @@
         .replace(/'/g, String.fromCharCode(38) + "#39;");
     }
 
+    const RUN_KEY = "az_marathon_run_start";
+    let tickTimer = null;
+
+    function formatDuration(ms) {
+      if (ms < 0) ms = 0;
+      const totalSec = Math.floor(ms / 1000);
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      const pad = (n) => String(n).padStart(2, "0");
+      return pad(h) + ":" + pad(m) + ":" + pad(s);
+    }
+
+    function readStoredRunStart() {
+      try {
+        const v = localStorage.getItem(RUN_KEY);
+        if (!v) return null;
+        const n = parseInt(v, 10);
+        return Number.isFinite(n) && n > 0 ? n : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function writeStoredRunStart(ts) {
+      try {
+        if (ts) localStorage.setItem(RUN_KEY, String(ts));
+        else localStorage.removeItem(RUN_KEY);
+      } catch (e) {}
+    }
+
     function getParams() {
       const p = new URLSearchParams(location.search);
       let letter = (p.get("letter") || "B").toUpperCase();
@@ -322,19 +402,32 @@
       if (Number.isNaN(pick) || pick < 0) pick = 0;
       const opts = DATA[letter];
       if (pick >= opts.length) pick = 0;
-      // also allow game=id
       const gameId = p.get("game");
       if (gameId) {
         const idx = opts.findIndex((o) => o.id === gameId);
         if (idx >= 0) pick = idx;
       }
       const mode = p.get("mode") === "overlay" ? "overlay" : "control";
-      return { letter, pick, mode };
+
+      // Whole-run start (unix seconds). Prefer URL so OBS stays in sync.
+      let runStart = null;
+      const runParam = p.get("runStart") || p.get("start");
+      if (runParam) {
+        const n = parseInt(runParam, 10);
+        if (Number.isFinite(n) && n > 1000000000) {
+          // accept seconds or ms
+          runStart = n > 1e12 ? Math.floor(n / 1000) : n;
+        }
+      }
+      if (!runStart) runStart = readStoredRunStart();
+
+      return { letter, pick, mode, runStart };
     }
 
-    function progressOf(letter) {
-      const num = LETTERS.indexOf(letter) + 1;
-      return { num, pct: (num / 26) * 100 };
+    function applyRunStartToUrl(u, runStart) {
+      if (runStart) u.searchParams.set("runStart", String(runStart));
+      else u.searchParams.delete("runStart");
+      u.searchParams.delete("start");
     }
 
     function flairHTML(flair) {
@@ -362,7 +455,12 @@
       return "";
     }
 
-    function overlayHTML(letter, game, compact) {
+    function progressOf(letter) {
+      const num = LETTERS.indexOf(letter) + 1;
+      return { num, pct: (num / 26) * 100 };
+    }
+
+    function overlayHTML(letter, game, compact, runStart) {
       const th = game.theme;
       const { num, pct } = progressOf(letter);
       const coverR = th.shape === "pill" ? "14px" : th.shape === "sharp" ? "4px" : "10px";
@@ -372,6 +470,10 @@
       const coverInner = coverSrc
         ? '<img src="' + escapeHtml(coverSrc) + '" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'" /><div class="ph" style="display:none">' + letter + "</div>"
         : '<div class="ph">' + letter + "</div>";
+      const elapsed = runStart ? formatDuration(Date.now() - runStart * 1000) : "00:00:00";
+      const timerBlock = runStart
+        ? '<div class="total-time"><span class="label">Total</span><span class="run-clock" data-run-start="' + runStart + '">' + elapsed + "</span></div>"
+        : "";
       return (
         '<div class="game-overlay ' + (compact ? "compact" : "") + '" data-flair="' + th.flair + '" style="' +
         "--g-primary:" + th.primary +
@@ -394,12 +496,32 @@
         "</div>" +
         '<div class="' + titleClass + '">' + escapeHtml(game.title) + "</div>" +
         (game.note ? '<div class="note">' + escapeHtml(game.note) + "</div>" : "") +
+        timerBlock +
         '<div class="bar" style="border-radius:' + barR + '"><div class="bar-fill" style="width:' + pct + '%;border-radius:inherit"></div></div>' +
         "</div></div>"
       );
     }
 
-    function setParams(letter, pick, mode) {
+    function startTicking() {
+      if (tickTimer) clearInterval(tickTimer);
+      tickTimer = setInterval(function () {
+        document.querySelectorAll(".run-clock").forEach(function (el) {
+          const start = parseInt(el.getAttribute("data-run-start"), 10);
+          if (!start) return;
+          el.textContent = formatDuration(Date.now() - start * 1000);
+        });
+        document.querySelectorAll(".control-run-clock").forEach(function (el) {
+          const start = parseInt(el.getAttribute("data-run-start"), 10);
+          if (!start) {
+            el.textContent = "00:00:00";
+            return;
+          }
+          el.textContent = formatDuration(Date.now() - start * 1000);
+        });
+      }, 1000);
+    }
+
+    function setParams(letter, pick, mode, runStart) {
       const u = new URL(location.href);
       u.searchParams.set("letter", letter);
       if (pick > 0) u.searchParams.set("pick", String(pick));
@@ -408,12 +530,16 @@
       if (opts && opts[pick]) u.searchParams.set("game", opts[pick].id);
       if (mode === "overlay") u.searchParams.set("mode", "overlay");
       else u.searchParams.delete("mode");
+      if (runStart === undefined) {
+        runStart = getParams().runStart;
+      }
+      applyRunStartToUrl(u, runStart);
       history.replaceState(null, "", u);
       render();
     }
 
     function render() {
-      const { letter, pick, mode } = getParams();
+      const { letter, pick, mode, runStart } = getParams();
       const opts = DATA[letter];
       const game = opts[pick];
       const app = document.getElementById("app");
@@ -421,7 +547,8 @@
       if (mode === "overlay") {
         document.body.className = "overlay-mode";
         document.documentElement.style.background = "transparent";
-        app.innerHTML = overlayHTML(letter, game, false);
+        app.innerHTML = overlayHTML(letter, game, false, runStart);
+        startTicking();
         return;
       }
 
@@ -434,6 +561,7 @@
       else obs.searchParams.delete("pick");
       obs.searchParams.set("game", game.id);
       obs.searchParams.set("mode", "overlay");
+      applyRunStartToUrl(obs, runStart);
       const obsStr = obs.toString();
 
       let picksHtml = "";
@@ -460,12 +588,32 @@
           "</div>";
       }
 
+      const clockVal = runStart ? formatDuration(Date.now() - runStart * 1000) : "00:00:00";
+      const timerHtml =
+        '<div class="timer-card">' +
+        '<div><div class="hint" style="margin:0 0 4px">Whole-run total</div>' +
+        '<div class="clock control-run-clock" data-run-start="' +
+        (runStart || "") +
+        '">' +
+        clockVal +
+        "</div></div>" +
+        '<div class="timer-actions">' +
+        '<button type="button" class="primary" id="startRun" style="background:' +
+        game.theme.primary +
+        '">' +
+        (runStart ? "Restart timer" : "Start marathon timer") +
+        "</button>" +
+        (runStart ? '<button type="button" id="clearRun">Clear</button>' : "") +
+        "</div>" +
+        '<p class="hint-inline">Starts a total time for the full A–Z run. It stays in the OBS URL as <code>runStart</code> so changing letters does not reset it.</p>' +
+        "</div>";
+
       app.innerHTML =
         '<div class="control">' +
         "<header>" +
         '<div class="badge">A–Z Marathon</div>' +
         "<h1>Streamer control</h1>" +
-        '<p class="lead">Pick a letter. If a letter has multiple game options (like E: Expedition 33 vs EA Sports), choose which one. Copy the OBS URL for the themed overlay with cover art.</p>' +
+        '<p class="lead">Pick a letter. Start the whole-run timer once at the beginning. Copy the OBS URL — it includes the timer so total time keeps going across every game.</p>' +
         "</header>" +
         '<div class="grid">' +
         '<section class="card">' +
@@ -483,11 +631,12 @@
         (idx >= 25 ? "disabled" : "") +
         ' aria-label="Next">›</button>' +
         "</div></div>" +
+        timerHtml +
         picksHtml +
         '<div class="preview-wrap" style="background:radial-gradient(ellipse at center, color-mix(in srgb, ' +
         game.theme.primary +
         ' 14%, transparent), transparent 70%)">' +
-        overlayHTML(letter, game, true) +
+        overlayHTML(letter, game, true, runStart) +
         "</div>" +
         '<div class="url-row">' +
         '<div class="url-box"><code id="urlText">' +
@@ -497,15 +646,16 @@
         game.theme.primary +
         '">Copy OBS URL</button>' +
         "</div>" +
-        '<p class="hint">OBS → Browser Source → paste URL → ~900×280 → transparent background. URL includes <code>letter</code> + <code>game</code>/<code>pick</code>.</p>' +
+        '<p class="hint">OBS → Browser Source → paste URL → ~900×280 → transparent. After starting the timer, re-copy the URL so OBS has <code>runStart</code>.</p>' +
         "</section>" +
         '<section class="card"><h2 style="margin-bottom:14px">All letters</h2><div class="letters" id="letters"></div></section>' +
         "</div>" +
-        '<section class="card how"><h2 style="margin-bottom:10px">Multi-game letters</h2>' +
+        '<section class="card how"><h2 style="margin-bottom:10px">How the total timer works</h2>' +
         "<ol>" +
-        "<li><strong>D</strong> — Destiny 2 with challenge options: Trials Flawless or Rumble.</li>" +
-        "<li><strong>E</strong> — Clair Obscur: Expedition 33 (Beat Simon), or EA Sports FC.</li>" +
-        "<li>Other letters are single-game. Covers are bundled so art loads in OBS.</li>" +
+        "<li>Click <strong>Start marathon timer</strong> when the run begins.</li>" +
+        "<li><strong>Copy OBS URL</strong> and paste/update the Browser Source.</li>" +
+        "<li>Change letters anytime — total time keeps counting (same <code>runStart</code>).</li>" +
+        "<li><strong>D</strong> has challenge options; <strong>E</strong> has Expedition 33 or EA Sports FC.</li>" +
         "</ol></section>" +
         "</div>";
 
@@ -526,7 +676,14 @@
           : "";
         const title =
           options.length > 1
-            ? options.map(function (o) { return o.title; }).filter(function (v, i, a) { return a.indexOf(v) === i; }).join(" / ")
+            ? options
+                .map(function (o) {
+                  return o.title;
+                })
+                .filter(function (v, i, a) {
+                  return a.indexOf(v) === i;
+                })
+                .join(" / ")
             : g0.title;
         b.innerHTML =
           '<strong style="color:' +
@@ -540,24 +697,24 @@
             ? '<span class="multi">' + options.length + " options</span>"
             : "");
         b.onclick = function () {
-          setParams(L, 0, "control");
+          setParams(L, 0, "control", runStart);
         };
         lettersEl.appendChild(b);
       });
 
       document.querySelectorAll(".pick-btn").forEach(function (btn) {
         btn.onclick = function () {
-          setParams(letter, parseInt(btn.getAttribute("data-pick"), 10), "control");
+          setParams(letter, parseInt(btn.getAttribute("data-pick"), 10), "control", runStart);
         };
       });
 
       document.getElementById("prev").onclick = function () {
         if (idx <= 0) return;
-        setParams(LETTERS[idx - 1], 0, "control");
+        setParams(LETTERS[idx - 1], 0, "control", runStart);
       };
       document.getElementById("next").onclick = function () {
         if (idx >= 25) return;
-        setParams(LETTERS[idx + 1], 0, "control");
+        setParams(LETTERS[idx + 1], 0, "control", runStart);
       };
       document.getElementById("copy").onclick = async function () {
         try {
@@ -571,8 +728,27 @@
           prompt("Copy this OBS URL:", obsStr);
         }
       };
+
+      const startBtn = document.getElementById("startRun");
+      if (startBtn) {
+        startBtn.onclick = function () {
+          const now = Math.floor(Date.now() / 1000);
+          writeStoredRunStart(now);
+          setParams(letter, pick, "control", now);
+        };
+      }
+      const clearBtn = document.getElementById("clearRun");
+      if (clearBtn) {
+        clearBtn.onclick = function () {
+          writeStoredRunStart(null);
+          setParams(letter, pick, "control", null);
+        };
+      }
+
+      startTicking();
     }
 
+    render();
     render();
   </script>
 </body>
