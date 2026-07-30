@@ -424,7 +424,7 @@
       font-size: 1.6rem; font-weight: 800; line-height: 1.15; color: var(--g-fg);
       text-shadow: 0 2px 10px rgba(0,0,0,.45), 0 0 20px color-mix(in srgb, var(--g-glow) 18%, transparent);
     }
-    .compact .title { font-size: 1.12rem; }
+    .compact .title { font-size: 1.15rem; }
     .title.comic { font-style: italic; }
     .title.pixel { text-transform: uppercase; letter-spacing: -0.02em; }
     .note {
@@ -447,19 +447,48 @@
       opacity: 0.85;
     }
 
+    
+    .main-col {
+      min-width: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 1;
+    }
+    .main-col .title {
+      width: 100%;
+      padding-right: 4px;
+    }
+    .main-bottom {
+      display: flex;
+      align-items: stretch;
+      gap: 12px;
+      min-width: 0;
+    }
+    .main-meta {
+      min-width: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      justify-content: center;
+    }
     .timer-panel {
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
       align-items: flex-end;
       justify-content: center;
-      min-width: 168px;
-      margin-left: auto;
-      padding: 10px 14px 10px 18px;
+      min-width: 170px;
+      margin-left: 0;
+      padding: 8px 4px 8px 16px;
       border-left: 1px solid color-mix(in srgb, var(--g-primary) 28%, transparent);
       text-align: right;
+      align-self: center;
     }
-    .compact .timer-panel {
+
+        .compact .timer-panel {
       min-width: 130px;
       padding: 6px 8px 6px 12px;
     }
@@ -883,15 +912,17 @@
         '<div class="aura-spin"></div><div class="scanlines"></div><div class="shine"><div class="shine-beam"></div></div>' + sparks +
         '<div class="letter-box"><span>' + letter + "</span></div>" +
         '<div class="cover" style="border-radius:' + coverR + '">' + coverInner + "</div>" +
-        '<div class="info">' +
+        '<div class="main-col">' +
         '<div class="progress-label">' + num + " / 26</div>" +
         '<div class="' + titleClass + '">' + escapeHtml(game.title) + "</div>" +
+        '<div class="main-bottom">' +
+        '<div class="main-meta">' +
         noteBlock +
         customBlock +
         '<div class="bar" style="border-radius:' + barR + '"><div class="bar-fill" style="width:' + pct + '%;border-radius:inherit"><div class="bar-shim"></div></div></div>' +
         "</div>" +
         timerPanel +
-        "</div>"
+        "</div></div></div>"
       );
     }
 
