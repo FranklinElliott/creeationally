@@ -482,7 +482,12 @@
     }
 
     function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, (c) => ({"&":"&","<":"<",">":">",'"':""","'":"&#39;"}[c]));
+      return String(s)
+        .replace(/&/g, String.fromCharCode(38) + 'amp;')
+        .replace(/</g, String.fromCharCode(38) + 'lt;')
+        .replace(/>/g, String.fromCharCode(38) + 'gt;')
+        .replace(/"/g, String.fromCharCode(38) + 'quot;')
+        .replace(/'/g, String.fromCharCode(38) + '#39;');
     }
 
     function render() {
