@@ -1136,11 +1136,26 @@
       animation: none !important;
     }
 
+  
+    /* === NO ANIMATIONS (performance) === */
+    .obs-fx, .spark, .shine, .shine-beam, .edge-runner, .scan-line,
+    .aura-spin, .pulse-ring, .scanlines, .bar-shim {
+      display: none !important;
+    }
+    .long-game-flag { animation: none !important; }
+    .game-overlay, .game-overlay * {
+      animation: none !important;
+    }
+    .letter-box, .cover, .cover img {
+      transform: none !important;
+    }
+
   </style>
 </head>
 <body>
   <div id="app"></div>
   <script>
+
 
 
 
@@ -1176,126 +1191,15 @@ function prefersReducedMotion() {
     }
 
     function startObsAnimations() {
+      // Animations disabled for stream performance (heavy games)
       stopObsAnimations();
-      if (prefersReducedMotion()) return;
-      var overlay = document.querySelector(".game-overlay");
-      if (!overlay) return;
-      animT0 = Date.now();
-
-      // Lightweight FX for stream PCs under game load
-      var fx = overlay.querySelector(".obs-fx");
-      if (!fx) {
-        fx = document.createElement("canvas");
-        fx.className = "obs-fx";
-        fx.setAttribute("aria-hidden", "true");
-        overlay.appendChild(fx);
-      }
-      var lastW = 0, lastH = 0, ctx = null;
-      function sizeCanvas() {
-        var w = overlay.clientWidth || 860;
-        var h = overlay.clientHeight || 188;
-        // 1x DPR only — half the pixels under load
-        if (w !== lastW || h !== lastH || !ctx) {
-          lastW = w; lastH = h;
-          fx.width = Math.max(1, w);
-          fx.height = Math.max(1, h);
-          fx.style.width = w + "px";
-          fx.style.height = h + "px";
-          ctx = fx.getContext("2d", { alpha: true });
-        }
-        return { w: w, h: h };
-      }
-
-      function roundRect(c, x, y, rw, rh, r) {
-        var rr = Math.min(r, rw / 2, rh / 2);
-        c.beginPath();
-        c.moveTo(x + rr, y);
-        c.arcTo(x + rw, y, x + rw, y + rh, rr);
-        c.arcTo(x + rw, y + rh, x, y + rh, rr);
-        c.arcTo(x, y + rh, x, y, rr);
-        c.arcTo(x, y, x + rw, y, rr);
-        c.closePath();
-      }
-
-      var frameN = 0;
-      function tick() {
-        frameN++;
-        var t = (Date.now() - animT0) / 1000;
-        var dim = sizeCanvas();
-        var w = dim.w, h = dim.h;
-        if (!ctx) return;
-
-        ctx.clearRect(0, 0, w, h);
-
-        var styles = getComputedStyle(overlay);
-        var primary = (styles.getPropertyValue("--g-primary") || "#39ff14").trim();
-        var glow = (styles.getPropertyValue("--g-glow") || primary).trim();
-        var pulse = 0.5 + 0.5 * Math.sin(t * 1.6); // slower pulse
-
-        // Soft border glow only (cheap)
-        ctx.save();
-        ctx.strokeStyle = primary;
-        ctx.globalAlpha = 0.2 + pulse * 0.25;
-        ctx.lineWidth = 2;
-        ctx.shadowColor = glow;
-        ctx.shadowBlur = 8 + pulse * 6;
-        roundRect(ctx, 3, 3, w - 6, h - 6, 14);
-        ctx.stroke();
-        ctx.restore();
-
-        // Single slow shine band (no multi-layer gradients spam)
-        var shineX = ((t * 0.22) % 1.5) * w - w * 0.25;
-        var grad = ctx.createLinearGradient(shineX, 0, shineX + w * 0.22, 0);
-        grad.addColorStop(0, "rgba(255,255,255,0)");
-        grad.addColorStop(0.5, "rgba(255,255,255," + (0.1 + pulse * 0.06) + ")");
-        grad.addColorStop(1, "rgba(255,255,255,0)");
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, w, h);
-
-        // One scan line only
-        var sy = ((t * 40) % (h + 30)) - 15;
-        ctx.globalAlpha = 0.1;
-        ctx.fillStyle = "#fff";
-        ctx.fillRect(0, sy, w, 2);
-        ctx.globalAlpha = 1;
-
-        // 2 sparks max, skip every other frame for cheaper paint
-        if (frameN % 2 === 0) {
-          for (var i = 0; i < 2; i++) {
-            var phase = t * (1.0 + i * 0.2) + i * 2.1;
-            var sx = w * (0.4 + i * 0.12) + Math.cos(phase) * 12;
-            var sy2 = h * (0.35 + i * 0.2) + Math.sin(phase) * 10;
-            ctx.beginPath();
-            ctx.fillStyle = primary;
-            ctx.globalAlpha = 0.35 + 0.35 * (0.5 + 0.5 * Math.sin(phase));
-            ctx.shadowColor = glow;
-            ctx.shadowBlur = 6;
-            ctx.arc(sx, sy2, 2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalAlpha = 1;
-            ctx.shadowBlur = 0;
-          }
-        }
-
-        // Gentle DOM motion only every other frame
-        if (frameN % 2 === 0) {
-          var letter = overlay.querySelector(".letter-box");
-          if (letter) {
-            var p = 0.5 + 0.5 * Math.sin(t * 1.8);
-            letter.style.transform = "scale(" + (1 + p * 0.03) + ")";
-          }
-          var cover = overlay.querySelector(".cover");
-          if (cover) {
-            cover.style.transform = "translateY(" + (Math.sin(t * 1.2) * 3) + "px)";
-          }
-        }
-
-        overlay.setAttribute("data-fx", String(Math.floor(t * 10)));
-      }
-
-      tick();
-      // ~10 fps — enough motion, far less GPU/CPU than 30fps under heavy games
-      animTimer = setInterval(tick, 100);
+      try {
+        document.querySelectorAll(".obs-fx").forEach(function (el) { el.remove(); });
+        document.querySelectorAll(".letter-box, .cover, .cover img, .game-overlay").forEach(function (el) {
+          el.style.transform = "";
+          el.style.filter = "";
+        });
+      } catch (e) {}
     }
 
 
@@ -1918,6 +1822,7 @@ function prefersReducedMotion() {
 
     render();
 
+  
   
   
   
