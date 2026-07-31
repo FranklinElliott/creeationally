@@ -895,10 +895,7 @@
       pointer-events: none !important;
       z-index: 5 !important;
     }
-    .game-overlay, .letter-box, .cover, .cover img, .shine-beam, .scan-line, .pulse-ring, .aura-spin, .timer-panel .run-clock {
-      will-change: transform, opacity, left, top;
-      backface-visibility: hidden;
-    }
+    /* will-change removed for lighter GPU under game load */
 
   
     .obs-fx {
@@ -1105,7 +1102,7 @@
       gap: 4px;
       margin-top: 4px;
       line-height: 1;
-      animation: longBob 1.1s ease-in-out infinite;
+      animation: longBob 2s ease-in-out infinite;
       pointer-events: none;
       z-index: 9;
     }
@@ -1129,11 +1126,22 @@
       50% { transform: translateY(3px); }
     }
 
+  
+    /* Light mode under game load: hide redundant DOM FX layers */
+    .spark, .shine, .shine-beam, .edge-runner, .scan-line, .aura-spin {
+      display: none !important;
+    }
+    .pulse-ring {
+      opacity: 0.35 !important;
+      animation: none !important;
+    }
+
   </style>
 </head>
 <body>
   <div id="app"></div>
   <script>
+
 
 
 
@@ -1174,7 +1182,7 @@ function prefersReducedMotion() {
       if (!overlay) return;
       animT0 = Date.now();
 
-      // Full-card canvas layer — OBS CEF reliably repaints canvas, not always CSS transforms
+      // Lightweight FX for stream PCs under game load
       var fx = overlay.querySelector(".obs-fx");
       if (!fx) {
         fx = document.createElement("canvas");
@@ -1182,99 +1190,20 @@ function prefersReducedMotion() {
         fx.setAttribute("aria-hidden", "true");
         overlay.appendChild(fx);
       }
+      var lastW = 0, lastH = 0, ctx = null;
       function sizeCanvas() {
         var w = overlay.clientWidth || 860;
-        var h = overlay.clientHeight || 168;
-        var dpr = Math.min(window.devicePixelRatio || 1, 2);
-        fx.width = Math.max(1, Math.floor(w * dpr));
-        fx.height = Math.max(1, Math.floor(h * dpr));
-        fx.style.width = w + "px";
-        fx.style.height = h + "px";
-        return { w: w, h: h, dpr: dpr };
-      }
-      var ctx = fx.getContext("2d", { alpha: true });
-
-      // Also keep DOM motion for browsers that show it
-      function tick() {
-        var t = (Date.now() - animT0) / 1000;
-        var dim = sizeCanvas();
-        var w = dim.w, h = dim.h, dpr = dim.dpr;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.clearRect(0, 0, w, h);
-
-        // Read theme color from CSS var
-        var styles = getComputedStyle(overlay);
-        var primary = (styles.getPropertyValue("--g-primary") || "#39ff14").trim();
-        var glow = (styles.getPropertyValue("--g-glow") || primary).trim();
-
-        // Pulsing border glow (canvas)
-        var pulse = 0.5 + 0.5 * Math.sin(t * 2.6);
-        ctx.save();
-        ctx.strokeStyle = primary;
-        ctx.globalAlpha = 0.25 + pulse * 0.45;
-        ctx.lineWidth = 2 + pulse * 2;
-        ctx.shadowColor = glow;
-        ctx.shadowBlur = 12 + pulse * 18;
-        roundRect(ctx, 3, 3, w - 6, h - 6, 14);
-        ctx.stroke();
-        ctx.restore();
-
-        // Sliding shine band
-        var shineX = ((t * 0.45) % 1.4) * w - w * 0.2;
-        var grad = ctx.createLinearGradient(shineX, 0, shineX + w * 0.25, 0);
-        grad.addColorStop(0, "rgba(255,255,255,0)");
-        grad.addColorStop(0.5, "rgba(255,255,255," + (0.18 + pulse * 0.1) + ")");
-        grad.addColorStop(1, "rgba(255,255,255,0)");
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, w, h);
-
-        // Scan line
-        var sy = ((t * 70) % (h + 40)) - 20;
-        var sg = ctx.createLinearGradient(0, sy - 20, 0, sy + 20);
-        sg.addColorStop(0, "rgba(255,255,255,0)");
-        sg.addColorStop(0.5, "rgba(255,255,255,0.14)");
-        sg.addColorStop(1, "rgba(255,255,255,0)");
-        ctx.fillStyle = sg;
-        ctx.fillRect(0, sy - 20, w, 40);
-
-        // Sparks
-        for (var i = 0; i < 5; i++) {
-          var phase = t * (1.5 + i * 0.25) + i * 2.1;
-          var sx = w * (0.35 + i * 0.1) + Math.cos(phase) * 18;
-          var sy2 = h * (0.3 + (i % 3) * 0.15) + Math.sin(phase * 1.3) * 14;
-          var op = 0.3 + 0.6 * (0.5 + 0.5 * Math.sin(phase * 1.4));
-          ctx.beginPath();
-          ctx.fillStyle = primary;
-          ctx.globalAlpha = op;
-          ctx.shadowColor = glow;
-          ctx.shadowBlur = 10;
-          ctx.arc(sx, sy2, 2.2 + op * 1.5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-          ctx.shadowBlur = 0;
+        var h = overlay.clientHeight || 188;
+        // 1x DPR only — half the pixels under load
+        if (w !== lastW || h !== lastH || !ctx) {
+          lastW = w; lastH = h;
+          fx.width = Math.max(1, w);
+          fx.height = Math.max(1, h);
+          fx.style.width = w + "px";
+          fx.style.height = h + "px";
+          ctx = fx.getContext("2d", { alpha: true });
         }
-
-        // Edge runner
-        var ex = ((t * 0.55) % 1) * w;
-        var eg = ctx.createLinearGradient(ex - 40, 0, ex + 40, 0);
-        eg.addColorStop(0, "rgba(255,255,255,0)");
-        eg.addColorStop(0.5, "rgba(255,255,255,0.2)");
-        eg.addColorStop(1, "rgba(255,255,255,0)");
-        ctx.fillStyle = eg;
-        ctx.fillRect(0, 0, w, h);
-
-        // DOM extras (works in normal browsers; canvas under text)
-        document.querySelectorAll(".letter-box").forEach(function (box) {
-          var p = 0.5 + 0.5 * Math.sin(t * 2.8);
-          box.style.transform = "scale(" + (1 + p * 0.07) + ")";
-        });
-        document.querySelectorAll(".cover").forEach(function (cover, i) {
-          cover.style.transform = "translateY(" + (Math.sin(t * 2 + i) * 5) + "px)";
-        });
-        /* timer clocks stay unscaled so digits never clip */
-
-        // Force text repaint path (timer already does; keep a live counter attribute)
-        overlay.setAttribute("data-fx", String(Math.floor(t * 30)));
+        return { w: w, h: h };
       }
 
       function roundRect(c, x, y, rw, rh, r) {
@@ -1288,9 +1217,87 @@ function prefersReducedMotion() {
         c.closePath();
       }
 
+      var frameN = 0;
+      function tick() {
+        frameN++;
+        var t = (Date.now() - animT0) / 1000;
+        var dim = sizeCanvas();
+        var w = dim.w, h = dim.h;
+        if (!ctx) return;
+
+        ctx.clearRect(0, 0, w, h);
+
+        var styles = getComputedStyle(overlay);
+        var primary = (styles.getPropertyValue("--g-primary") || "#39ff14").trim();
+        var glow = (styles.getPropertyValue("--g-glow") || primary).trim();
+        var pulse = 0.5 + 0.5 * Math.sin(t * 1.6); // slower pulse
+
+        // Soft border glow only (cheap)
+        ctx.save();
+        ctx.strokeStyle = primary;
+        ctx.globalAlpha = 0.2 + pulse * 0.25;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = glow;
+        ctx.shadowBlur = 8 + pulse * 6;
+        roundRect(ctx, 3, 3, w - 6, h - 6, 14);
+        ctx.stroke();
+        ctx.restore();
+
+        // Single slow shine band (no multi-layer gradients spam)
+        var shineX = ((t * 0.22) % 1.5) * w - w * 0.25;
+        var grad = ctx.createLinearGradient(shineX, 0, shineX + w * 0.22, 0);
+        grad.addColorStop(0, "rgba(255,255,255,0)");
+        grad.addColorStop(0.5, "rgba(255,255,255," + (0.1 + pulse * 0.06) + ")");
+        grad.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+
+        // One scan line only
+        var sy = ((t * 40) % (h + 30)) - 15;
+        ctx.globalAlpha = 0.1;
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, sy, w, 2);
+        ctx.globalAlpha = 1;
+
+        // 2 sparks max, skip every other frame for cheaper paint
+        if (frameN % 2 === 0) {
+          for (var i = 0; i < 2; i++) {
+            var phase = t * (1.0 + i * 0.2) + i * 2.1;
+            var sx = w * (0.4 + i * 0.12) + Math.cos(phase) * 12;
+            var sy2 = h * (0.35 + i * 0.2) + Math.sin(phase) * 10;
+            ctx.beginPath();
+            ctx.fillStyle = primary;
+            ctx.globalAlpha = 0.35 + 0.35 * (0.5 + 0.5 * Math.sin(phase));
+            ctx.shadowColor = glow;
+            ctx.shadowBlur = 6;
+            ctx.arc(sx, sy2, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+          }
+        }
+
+        // Gentle DOM motion only every other frame
+        if (frameN % 2 === 0) {
+          var letter = overlay.querySelector(".letter-box");
+          if (letter) {
+            var p = 0.5 + 0.5 * Math.sin(t * 1.8);
+            letter.style.transform = "scale(" + (1 + p * 0.03) + ")";
+          }
+          var cover = overlay.querySelector(".cover");
+          if (cover) {
+            cover.style.transform = "translateY(" + (Math.sin(t * 1.2) * 3) + "px)";
+          }
+        }
+
+        overlay.setAttribute("data-fx", String(Math.floor(t * 10)));
+      }
+
       tick();
-      animTimer = setInterval(tick, 33);
+      // ~10 fps — enough motion, far less GPU/CPU than 30fps under heavy games
+      animTimer = setInterval(tick, 100);
     }
+
 
 
     
@@ -1911,6 +1918,7 @@ function prefersReducedMotion() {
 
     render();
 
+  
   
   
   
