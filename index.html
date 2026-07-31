@@ -1150,11 +1150,20 @@
       transform: none !important;
     }
 
+  
+    .timer-panel .run-clock,
+    .timer-panel .game-clock,
+    .timer-panel .total-clock {
+      min-width: 8.5ch !important;
+      font-variant-numeric: tabular-nums !important;
+    }
+
   </style>
 </head>
 <body>
   <div id="app"></div>
   <script>
+
 
 
 
@@ -1218,14 +1227,12 @@ function prefersReducedMotion() {
     function formatDuration(ms) {
       if (ms < 0) ms = 0;
       const totalSec = Math.floor(ms / 1000);
-      const d = Math.floor(totalSec / 86400);
-      const h = Math.floor((totalSec % 86400) / 3600);
+      // Total hours (can go past 24: 25:00:00, 72:15:30) — easier to read than days
+      const h = Math.floor(totalSec / 3600);
       const m = Math.floor((totalSec % 3600) / 60);
       const s = totalSec % 60;
       const pad = (n) => String(n).padStart(2, "0");
-      // Always fixed pattern so timer column never resizes
-      if (d > 0) return d + "d " + pad(h) + ":" + pad(m) + ":" + pad(s);
-      return pad(h) + ":" + pad(m) + ":" + pad(s);
+      return h + ":" + pad(m) + ":" + pad(s);
     }
 
     function readStoredRunStart() {
@@ -1564,16 +1571,16 @@ function prefersReducedMotion() {
       let gd = 0, gh = 0, gm = 0, gs = 0;
       if (gameStart) {
         const gSec = Math.max(0, Math.floor(Date.now() / 1000 - gameStart));
-        gd = Math.floor(gSec / 86400);
-        gh = Math.floor((gSec % 86400) / 3600);
+        gd = 0;
+        gh = Math.floor(gSec / 3600); // total hours
         gm = Math.floor((gSec % 3600) / 60);
         gs = gSec % 60;
       }
       let ed = 0, eh = 0, em = 0, es = 0;
       if (runStart) {
         const totalSec = Math.max(0, Math.floor(Date.now() / 1000 - runStart));
-        ed = Math.floor(totalSec / 86400);
-        eh = Math.floor((totalSec % 86400) / 3600);
+        ed = 0;
+        eh = Math.floor(totalSec / 3600); // total hours (can be 25, 72, …)
         em = Math.floor((totalSec % 3600) / 60);
         es = totalSec % 60;
       }
@@ -1590,7 +1597,7 @@ function prefersReducedMotion() {
         "</div></div>" +
         '<div class="elapsed-row">' +
         '<label>Days<input id="gd" type="number" min="0" max="365" value="' + gd + '" /></label>' +
-        '<label>Hours<input id="gh" type="number" min="0" max="23" value="' + gh + '" /></label>' +
+        '<label>Hours<input id="gh" type="number" min="0" max="999" value="' + gh + '" /></label>' +
         '<label>Mins<input id="gm" type="number" min="0" max="59" value="' + gm + '" /></label>' +
         '<label>Secs<input id="gs" type="number" min="0" max="59" value="' + gs + '" /></label>' +
         '<button type="button" class="primary" id="applyGameElapsed" style="background:' + game.theme.primary + ';height:42px">Set game time in</button>' +
@@ -1607,12 +1614,12 @@ function prefersReducedMotion() {
         "</div></div>" +
         '<div class="elapsed-row">' +
         '<label>Days<input id="ed" type="number" min="0" max="365" value="' + ed + '" /></label>' +
-        '<label>Hours<input id="eh" type="number" min="0" max="23" value="' + eh + '" /></label>' +
+        '<label>Hours<input id="eh" type="number" min="0" max="999" value="' + eh + '" /></label>' +
         '<label>Mins<input id="em" type="number" min="0" max="59" value="' + em + '" /></label>' +
         '<label>Secs<input id="es" type="number" min="0" max="59" value="' + es + '" /></label>' +
         '<button type="button" class="primary" id="applyElapsed" style="background:' + game.theme.primary + ';height:42px">Set total time in</button>' +
         "</div>" +
-        '<p class="field-hint" style="margin-top:8px">Full marathon time across all letters. Days supported.</p>' +
+        '<p class="field-hint" style="margin-top:8px">Full marathon time across all letters. Shows as total hours (e.g. 25:30:00, 72:00:00).</p>' +
         "</div>";
 
 
@@ -1661,7 +1668,7 @@ function prefersReducedMotion() {
         '<section class="card"><h2 style="margin-bottom:14px">All letters</h2><div class="letters" id="letters"></div></section>' +
         "</div>" +
         '<section class="card how"><h2 style="margin-bottom:10px">Quick tips</h2><ol>' +
-        "<li><strong>Set time already in</strong> with days + hours if the marathon is multi-day.</li>" +
+        "<li><strong>Set time already in</strong> with total hours if the marathon is long (e.g. 25, 72).</li>" +
         "<li><strong>Custom challenge</strong> is optional — only shows if you fill it in.</li>" +
         "<li>Timer lives in the OBS URL (<code>runStart</code>). Other streamers do not affect yours.</li>" +
         "<li><strong>E</strong> has Expedition 33 or EA Sports FC. Use custom challenge for goals.</li>" +
@@ -1822,6 +1829,7 @@ function prefersReducedMotion() {
 
     render();
 
+  
   
   
   
