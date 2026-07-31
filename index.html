@@ -1158,11 +1158,19 @@
       font-variant-numeric: tabular-nums !important;
     }
 
+  
+    .timer-block.game-time.is-very-long .long-emoji {
+      font-size: 1.25rem;
+    }
+    .long-game-flag .long-emoji + .long-emoji {
+      margin-left: 1px;
+    }
   </style>
 </head>
 <body>
   <div id="app"></div>
   <script>
+
 
 
 
@@ -1383,17 +1391,22 @@ function prefersReducedMotion() {
       const elapsed = runStart ? formatDuration(Date.now() - runStart * 1000) : "";
       const gameElapsedMs = gameStart ? (Date.now() - gameStart * 1000) : 0;
       const gameElapsed = gameStart ? formatDuration(gameElapsedMs) : "";
-      const gameLong = !!(gameStart && gameElapsedMs >= 5 * 60 * 60 * 1000);
+      const gameCryLevel = !gameStart ? 0
+        : gameElapsedMs >= 5 * 60 * 60 * 1000 ? 2
+        : gameElapsedMs > 2 * 60 * 60 * 1000 ? 1
+        : 0;
       const timerPanel =
         '<div class="timer-panel">' +
-        '<div class="timer-block game-time' + (gameLong ? " is-long" : "") + '">' +
+        '<div class="timer-block game-time' + (gameCryLevel ? " is-long" : "") + (gameCryLevel >= 2 ? " is-very-long" : "") + '">' +
         '<div class="label">Current game</div>' +
         (gameStart
           ? '<div class="run-clock game-clock" data-game-start="' + gameStart + '">' + gameElapsed + "</div>"
           : '<div class="run-clock game-clock">--:--:--</div>') +
-        (gameLong
-          ? '<div class="long-game-flag" title="Over 5 hours on this game">' +
-            '<span class="long-arrow">➜</span><span class="long-emoji">😭</span></div>'
+        (gameCryLevel
+          ? '<div class="long-game-flag" title="' + (gameCryLevel >= 2 ? "5+ hours on this game" : "Over 2 hours on this game") + '">' +
+            '<span class="long-arrow">➜</span><span class="long-emoji">😭</span>' +
+            (gameCryLevel >= 2 ? '<span class="long-emoji">😭</span>' : "") +
+            "</div>"
           : "") +
         "</div>" +
         '<div class="timer-block total-time-block">' +
@@ -1474,17 +1487,23 @@ function prefersReducedMotion() {
           var ms = Date.now() - start * 1000;
           var block = el.closest(".timer-block.game-time") || el.parentElement;
           if (!block) return;
-          var long = ms >= 5 * 60 * 60 * 1000;
-          if (long) block.classList.add("is-long");
+          var level = ms >= 5 * 60 * 60 * 1000 ? 2 : ms > 2 * 60 * 60 * 1000 ? 1 : 0;
+          if (level) block.classList.add("is-long");
           else block.classList.remove("is-long");
+          if (level >= 2) block.classList.add("is-very-long");
+          else block.classList.remove("is-very-long");
           var flag = block.querySelector(".long-game-flag");
-          if (long && !flag) {
+          if (level && !flag) {
             flag = document.createElement("div");
             flag.className = "long-game-flag";
-            flag.title = "Over 5 hours on this game";
-            flag.innerHTML = '<span class="long-arrow">➜</span><span class="long-emoji">😭</span>';
             block.appendChild(flag);
-          } else if (!long && flag) {
+          }
+          if (level && flag) {
+            flag.title = level >= 2 ? "5+ hours on this game" : "Over 2 hours on this game";
+            flag.innerHTML =
+              '<span class="long-arrow">➜</span><span class="long-emoji">😭</span>' +
+              (level >= 2 ? '<span class="long-emoji">😭</span>' : "");
+          } else if (!level && flag) {
             flag.remove();
           }
         });
@@ -1829,6 +1848,7 @@ function prefersReducedMotion() {
 
     render();
 
+  
   
   
   
