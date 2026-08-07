@@ -1273,7 +1273,92 @@
       border-color: color-mix(in srgb, #a78bfa 55%, var(--border));
     }
 
-  </style>
+  
+/* RESPONSIVE-POLISH */
+html { overflow-x: clip; -webkit-text-size-adjust: 100%; }
+body:not(.overlay-mode) { overflow-x: clip; min-height: 100dvh; }
+.control {
+  padding: 20px 14px max(56px, calc(40px + env(safe-area-inset-bottom))) !important;
+  padding-left: max(14px, env(safe-area-inset-left)) !important;
+  padding-right: max(14px, env(safe-area-inset-right)) !important;
+  max-width: 980px;
+}
+@media (min-width: 640px) {
+  .control { padding: 32px 20px 72px !important; }
+}
+.letters {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+}
+@media (min-width: 400px) {
+  .letters { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; gap: 8px !important; }
+}
+@media (min-width: 720px) {
+  .letters { grid-template-columns: repeat(7, minmax(0, 1fr)) !important; }
+}
+@media (min-width: 960px) {
+  .letters { grid-template-columns: repeat(9, minmax(0, 1fr)) !important; }
+}
+.letter-btn {
+  min-height: 56px;
+  padding: 10px 4px !important;
+  touch-action: manipulation;
+  overflow: hidden;
+}
+.letter-btn strong { font-size: 16px !important; }
+.letter-btn span {
+  display: block;
+  font-size: 9px !important;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  opacity: 0.75;
+}
+@media (min-width: 640px) {
+  .letter-btn { min-height: 64px; padding: 12px 8px !important; }
+  .letter-btn strong { font-size: 18px !important; }
+  .letter-btn span { font-size: 10px !important; }
+}
+.preview-wrap {
+  padding: 10px !important;
+  min-height: 0 !important;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.preview-wrap > * { max-width: 100%; }
+.url-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+@media (min-width: 640px) {
+  .url-actions { flex-direction: row; align-items: stretch; }
+}
+.copy-btn, .secondary-btn {
+  width: 100%;
+  min-height: 48px;
+  touch-action: manipulation;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+input, textarea { font-size: 16px !important; }
+@media (min-width: 640px) {
+  input, textarea { font-size: 14px !important; }
+}
+.icon-btn { min-width: 44px; min-height: 44px; touch-action: manipulation; }
+.pick-btn { min-height: 40px; touch-action: manipulation; }
+.card { padding: 16px !important; }
+@media (min-width: 640px) { .card { padding: 20px !important; } }
+.timer-card .clock { font-size: clamp(1.4rem, 6vw, 1.85rem) !important; font-weight: 600 !important; }
+body.overlay-mode {
+  padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+}
+/* END-RESPONSIVE-POLISH */
+
+</style>
 </head>
 <body>
   <div id="app"></div>
